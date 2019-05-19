@@ -1,0 +1,146 @@
+
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+
+using AutoMapper;
+
+using Lims.BaseModels;
+using Lims.Models;
+using Lims.ViewModels;
+using Lims.TransferModels;
+
+namespace Lims.Managers
+{
+    public class SamplesManager
+    {
+        private LimsContext db;
+        private ILogger logger;
+        private SamplesManager(LimsContext db)
+        {
+            this.db = db;
+        }
+
+        public SamplesManager(LimsContext db, IServiceProvider provider) : this(db)
+        {
+            this.logger = provider.GetService<ILoggerFactory>().CreateLogger("Samples Manager");
+        }
+
+        public async Task<List<SampleModel>> GetByPurchaseOrderRequestId(int purchaseOrderRequestId)
+        {
+            return (await db.PurchaseOrderRequests.Include( p => p.Samples ).SingleAsync( p => p.Id == purchaseOrderRequestId )).Samples;
+        }
+
+
+        /* Purchase Request Methods */
+        public async Task<List<PurchaseOrderRequestViewModel>> GetPurchaseOrderRequests()
+        {
+            var models = await db.PurchaseOrderRequests.Include( p => p.Quotation )
+                                                 .Include( p => p.Samples )
+                                                    .ThenInclude( s => s.SampleTestParameters )
+                                                        .ThenInclude( t => t.Method )
+                                                 .Include( p => p.Samples )
+                                                    .ThenInclude( s => s.SampleTestParameters )
+                                                        .ThenInclude( t => t.TestParameter )
+                                                 .Include( p => p.ReceivedFrom )
+                                                    .ThenInclude( r => r.Customer ).ToListAsync();
+
+            return models.ToViewModel();
+            //return Mapper.Map<List<PurchaseOrderRequestModel>, List<PurchaseOrderRequestViewModel>>(models) as List<PurchaseOrderRequestViewModel>;
+        }
+
+        public async Task<List<PurchaseOrderRequestModel>> GetPurchaseOrderRequest(int id)
+        {
+            return await db.PurchaseOrderRequests.ToListAsync();
+        }
+
+        public async Task<List<PurchaseOrderRequestModel>> GetPurchaseOrderRequestBySampleId(int sampleId)
+        {
+            return await db.PurchaseOrderRequests.ToListAsync();
+        }
+
+        public async Task<QuotationModel> GetPurchaseOrderRequestQuotation(int purchaseOrderRequestId)
+        {
+            if(! (await db.PurchaseOrderRequests.AnyAsync( p => p.Id == purchaseOrderRequestId )) ) throw new Exception("Purchase Order doesn't exist");
+            return (await db.PurchaseOrderRequests.Include( p => p.Quotation ).SingleAsync( p => p.Id == purchaseOrderRequestId )).Quotation;
+        }
+
+        public async Task<int> SavePurchaseOrderRequest(PurchaseOrderRequestModel model)
+        {
+            if(model.Id == 0)
+            {
+                db.PurchaseOrderRequests.Add(model);
+            }
+            else
+            {
+                var origModel = await db.PurchaseOrderRequests.Include( p => p.Samples ).Include( p => p.Quotation ).SingleAsync( p => p.Id == model.Id );
+                origModel = model;
+            }
+            await db.SaveChangesAsync();
+            return model.Id;
+        }
+
+        public async Task<int> SavePurchaseOrderRequest(PurchaseOrderRequestTransferModel transferModel)
+        {
+            return await SavePurchaseOrderRequest(Mapper.Map<PurchaseOrderRequestModel>(transferModel));
+        }
+
+        
+
+        public async Task DeletePurchaseOrderRequest(int purchaseOrderRequestId)
+        {
+            var model = await db.PurchaseOrderRequests.SingleOrDefaultAsync( p => p.Id == purchaseOrderRequestId );
+
+            if(model != null && model.Id != 0)
+            {
+                db.PurchaseOrderRequests.Remove(model);
+                await db.SaveChangesAsync();
+            }
+        }
+    }
+
+    public static class PurchaseOrderExtensions
+    {
+        public static PurchaseOrderRequestViewModel ToViewModel(this PurchaseOrderRequestModel model)
+        {
+            var quotation = model.Quotation ?? new QuotationModel();
+            var contact = model.ReceivedFrom ?? new ContactModel();
+            var customer = contact.Customer ?? new CustomerModel();
+
+            return new PurchaseOrderRequestViewModel { Id = model.Id, Code = model.Code, ReceivedDate = model.ReceivedDate,
+                                                        ContactId = contact.Id, ContactName = contact.Name, ContactPhoneNumber = contact.PhoneNumber,
+                                                        CustomerId = customer.Id, CustomerName = customer.Name, CustomerPhoneNumber = customer.PhoneNumber,
+                                                        SamplingFees = quotation.SamplingFees, ExtraFees = quotation.ExtraFees, ExtraFeesReason = quotation.ExtraFeesReason, Discount = quotation.Discount,
+                                                        Samples = Mapper.Map<List<SampleModel>, List<SampleViewModel>>(model.Samples) }  ;
+        }
+        public static List<PurchaseOrderRequestViewModel> ToViewModel(this List<PurchaseOrderRequestModel> models)
+        {
+            var viewModels = new List<PurchaseOrderRequestViewModel>();
+            foreach( var model in models )
+                viewModels.Add( model.ToViewModel() );
+            return viewModels;
+        }
+    }
+
+    public static class SampleExtensions
+    {
+        public static List<SampleViewModel> ToViewModel(this List<SampleModel> models)
+        {
+            var viewModels = new List<SampleViewModel>();
+            foreach(var model in models)
+                viewModels.Add(model.ToViewModel());
+            return viewModels;
+        }
+
+        public static SampleViewModel ToViewModel(this SampleModel model)
+        {
+            return new SampleViewModel();
+        }
+    }
+}

@@ -1,0 +1,147 @@
+
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
+
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
+
+using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Identity;
+
+using System.Linq;
+
+namespace Lims
+{
+    using TIdentity = TestUserIdentity;
+
+    public class TestController : Controller
+    {
+        private ILogger logger;
+        private IAuthorizationService authService;
+
+
+        private UserManager<TIdentity> userManager;
+        private IUserValidator<TIdentity> validator;
+        private PasswordValidator<TIdentity> pValidator;
+
+        public TestController(ILoggerFactory logger, IAuthorizationService authService, UserManager<TIdentity> userManager, IUserValidator<TIdentity> validator, PasswordValidator<TIdentity> pValidator)
+        {
+            this.logger = logger.CreateLogger("Test Logger");
+            this.authService = authService;
+
+            this.userManager = userManager;
+            this.validator = validator;
+            this.pValidator = pValidator;
+        }
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        //[Authorize("MustBeMOA995")]
+        public IActionResult TestAction()
+        {
+            logger.LogWarning("Test Action Called");
+            //return Ok();
+            return new JsonResult(new { id = 1, name = "Mohammad" }) { StatusCode = StatusCodes.Status200OK };
+        }
+
+        public async Task<IActionResult> RequireAuthorizationAction(int id)
+        {
+            logger.LogWarning($"RequireAuthorizationAction Action Called: {id}");
+            
+            if(HttpContext.User == null)
+                return Forbid();
+            
+            var result = await authService.AuthorizeAsync(HttpContext.User, null, "MustBeAuthenticated");
+            if(result.Succeeded)
+                return Ok();
+
+            return Unauthorized();
+        }
+
+        [Authorize("MustBeMOA995")]
+        [ActionName("PolicyTest")]
+        public IActionResult RequireAuthorizationPolicyAction(int id)
+        {
+            logger.LogWarning($"RequireAuthorizationPolicyAction Action Called: {id}");
+
+            return Ok();
+        }
+
+        [ActionName("ValidateUser")]
+        [Route("[action]/{userName?}/{password?}")]
+        [Route("[controller]/[action]/{userName?}/{password?}")]
+        // [Route("ValidateUser/{userName}/{password}")]
+        // [Route("[controller]/ValidateUser/{userName}/{password}")]
+        // [Route("[controller]/[action]/{userName}/{password}")]
+        public async Task<IActionResult> ValidateUser(string userName, string password)
+        {
+            logger.LogWarning("ValidateUser Called");
+
+            //return Task.FromResult(new OkResult() as IActionResult);
+
+            // return Task.Run( () => {
+            //     return Ok() as IActionResult;
+            // } );
+
+            //byte[] pass = System.Text.Encoding.Default.GetBytes("maa".ToCharArray());
+            //string passwordHash = System.Security.Cryptography.SHA512.Create("hash").ComputeHash( pass ).ToString();
+            
+            //string passwordHash = System.Convert.ToBase64String(pass);
+            //IdentityResult result = await validator.ValidateAsync(userManager, new TestUserIdentity { UserName = "moa995", PasswordHash = passwordHash, NormalizedUserName = "moa995" });
+            // return Task.FromResult(Ok() as IActionResult);
+            //TestUserIdentity user = await userManager.FindByNameAsync("moa995");
+            IdentityResult result = IdentityResult.Success;
+            PasswordVerificationResult passResult = PasswordVerificationResult.Success;
+
+            if(string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
+                result = IdentityResult.Failed(new IdentityError { Code = "1", Description = "username or password" });
+            else
+            {
+                var hasher = new PasswordHasher<TestUserIdentity>();
+                //var user = new TestUserIdentity { UserName = "moa995" };
+                //user.PasswordHash = hasher.HashPassword(user, password);
+                //result = await validator.ValidateAsync(userManager,  user);
+                var user = await userManager.FindByNameAsync(userName);
+                result = await pValidator.ValidateAsync(userManager, user, password);
+                passResult = hasher.VerifyHashedPassword(user, user.PasswordHash, password);
+            }
+
+            if(!result.Succeeded)
+                return StatusCode( StatusCodes.Status400BadRequest, result.Errors.First().Description );
+            if(passResult == PasswordVerificationResult.Success)
+                return StatusCode(StatusCodes.Status200OK, password);
+            // return StatusCode( StatusCodes.Status401Unauthorized, result.Errors.ToList().First().Description );
+            return StatusCode( StatusCodes.Status400BadRequest, "Wrong Password" );
+        }
+
+        public IActionResult CaptureAllAction(string url)
+        {
+            logger.LogWarning($"CaptureAll Action Called: {url}");
+            return Ok();
+        }
+
+        public override void OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext context)
+        {
+            logger.LogWarning("On Action Executed");
+        }
+
+        public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+        {
+            logger.LogWarning("On Action Executing");
+        }
+
+        public override Task OnActionExecutionAsync(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context, Microsoft.AspNetCore.Mvc.Filters.ActionExecutionDelegate next)
+        {
+            logger.LogWarning("On Action Execution Async before");
+            Task work = next();
+            logger.LogWarning("On Action Execution Async after");
+            return work;
+        }
+    }
+}

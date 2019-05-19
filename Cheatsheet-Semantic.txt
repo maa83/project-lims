@@ -1,0 +1,130 @@
+
+
+pusher
+[* container]
+
+******Popup\Tooltip******
+data-content
+data-tooltip
+data-inverted
+
+
+******SEGMENTS******
+
+ui [disabled] [loading] [circular] [ [ right | left | center ] aligned ] [raised | stacked | piled ] [ [very] padded ] segment
+ui [inverted] [compact] [secondary | tertiary] [%colorName] segment
+ui [ [right | left ] floated ] segment
+ui [ clearing ] segment => <el> [ [right | left ] [floated] ]
+ui [horizontal] segments => ui segment
+
+
+******GRIDS******
+ui [(equal width | (x/16) column) & doubling & stackable & padded & relaxed & centered & [vertically | horizontally] padded] grid
+
+ui [ [ [ internally ] celled ] | [ [ vertically ] divided ] ] grid > row /*row required*/
+
+ui grid > [(x/16) column & stretched & (colour)] row > column > ui segment /*any number of segments*/
+
+ui [[left | right | center] aligned | justified] [grid | row | column]
+
+[{x/16} wide & (colour) & (left | right) floated] column
+
+[top attached]
+[bottom attached]
+ui top attached button => ui grid
+
+ui grid container
+ui four column grid
+ui four column doubling stackable grid container
+ui grid > four column row
+ui grid > row > four wide column
+ui grid > row > four wide column > ui segment
+ui grid > four column row > left floated column & right floated column
+
+
+
+******BUTTONS*****
+ui button => <i> %icon_name icon
+ui [primary | secondary | negative | positive] [basic] [ icon ] [ labeled ] [active | disabled] button
+
+ui [left] labeled button => [<div> ui button => <i> icon]  [ <div> ui label ]
+ui icon labeled button
+ui icon button
+
+*Size*
+ui [mini | tiny | small | medium | large | big | huge | massive ] button
+
+*Group*
+ui [icon] buttons => <div> ui button
+
+
+******Headers*****
+ui [dividing] header
+
+
+******MODALS*****
+$('.ui.modal').modal(props: {
+                centered: false,
+                selector: {
+                    close: '.close',
+                    approve: '.ok, .positive',
+                    deny: '.cancel, .negative'
+                },
+                onShow: () => { console.log('modal show'); },
+                onVisible: () => {  },
+                onHide: (el) => { console.log('modal hide'); },
+                onHidden: () => {  },
+                onApprove: (el) => { console.log('modal approved'); },
+                onDeny: (el) => { console.log('modal denied'); }
+            })
+			.modal(cmd)
+
+ui [basic] modal => [ <div> header] [ <div> [image] content => <img> image ] [<div> description] [ <div> actions => ui button] [ <div> [ scrolling ] content ]
+
+ui [ mini | tiny | small | large | longer | fullscreen ] modal
+
+
+******HEADERS*****
+ui [icon] header => [<i> icon] [<div> content => <div> sub header] [ sub header ]
+ui [sub] header
+
+
+******FORMS*****
+ui [inverted] form => ui [ field | [ [ x/16 ] fields ] => field ]
+
+
+******DROPDOWN*****
+ui [ search ] [ selection ] [ multiple ] dropdown > [ <div> [ default ] text ] [ <input> %name %hidden  ] [ <i> dropdown icon ] <div> menu > item
+
+$('.dropdown').dropdown({
+                onAdd: (val, text, choice) => {
+                    // console.log(val, text, choice);
+                },
+                onRemove: (val, text, choice) => {
+                    // console.log(val, text, choice);
+                },
+                onChange: (val, text, choice) => {
+                    //val, text and choice differ depending on %multiple
+                },
+                allowAdditions: true,
+                match: 'text',
+                forceSelection: false
+            });
+
+******MENU*****
+<div> ui [ stackable ] menu > [ <div> ui container ] > [ icon ] item > <i> %icon_name icon
+
+
+******TABLE*****
+ui [ compact ] [ celled ] [ definition => <thead | tfoot> [full-width] ] table
+
+
+
+
+
+
+
+
+
+
+

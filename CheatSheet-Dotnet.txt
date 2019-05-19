@@ -1,0 +1,975 @@
+
+
+<PropertyGroup>
+<OutputType>Exe</OutputType>
+<TargetFramework>netcoreapp2.1</TargetFramework>
+<RunTimeIdentifier>win-x86</RunTimeIdentifier>
+</PropertyGroup>
+
+<ItemGroup>
+<Folder Include="wwwroot\" />
+</ItemGroup>
+
+<ItemGroup>
+<Compile Include="Content\*.cs" />
+</ItemGroup>
+
+<ItemGroup>
+<PackageReference Include="Dapper" Version="1.50.5" />
+<PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.2" />
+</ItemGroup>
+
+
+
+System.Predicate = x => x == 1; //must return boolean and accept any number of arguemnts.
+System.Action = (x) => {}; //must return void and accept any number of arguemnts.
+System.Func = () => 1; //must return result and accept any number of arguemnts. hence, if only one generic type defined, it is the result type.
+
+using AliasName = Assembly.TypeName<T>()
+System.Reflection.MethodInfo.GetCurrentMethod().GetParameters()[0].GetCustomAttributes(false);
+
+nameof
+typeof
+using()
+async
+await
+in
+unsafe
+{
+	var bytes = sizeof(int) * 8;
+}
+
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+using System.IO;
+
+
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Routing.Constraints;
+using Microsoft.AspNetCore.Http;
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
+
+using Microsoft.EntityFrameworkCore;
+
+
+namespace Lims
+{
+    public class Startup
+    {
+        public Startup(IConfiguration configuration, IHostingEnvironment env)
+        {
+            env.EnvironmentName = "Development";
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddMvc();
+            
+            services.AddMvc( o => {
+                o.OutputFormatters.Add(new CustomFormatter())
+                o.Filters.Add(new CustomFilter())
+            } ).AddRazorOptions( o => {
+                //{0} for action
+                //{1} for controller
+                //{2} for area
+                o.ViewLocationFormats.Add("~/Views/Area/{2}/Controller/{1}/Action/{0}.cshtml");
+                o.ViewLocationFormats.Add("~/Views/Shared/{0}.cshtml");
+                o.ViewLocationExpanders.Add(new CustomLocationExpander());
+
+            }).AddxxxxOptions();
+
+            services.AddDbContext<LimsContext>(builder => 
+            { 
+                //builder.UseSqlite(@"data source=D:\db.db;", ctxOptions => { ctxOptions.CommandTimeout(120); });
+                builder.UseInMemoryDatabase("LimsDb");
+            });
+
+
+            new DbContextOptionsBuilder();
+            new DbContextOptions();
+            AddDbContext<T>(this IServiceCollection services, Action<DbContextOptionsBuilder> builder);
+            DbContextOptionsBuilder.Usexxx(DbContextOptions ctxOptions);
+
+            services.AddDbContext<LimsContext>(builder => 
+            { 
+                //builder.UseSqlite(@"data source=D:\db.db;", ctxOptions => { ctxOptions.CommandTimeout(120); });
+                builder.UseSqlServer(@"data source=localhost;user=atg;password=something;initial catalog=knpcarchive", ctxOptions => { 
+                    ctxOptions.CommandTimeout(120);
+                });
+                builder.UseInMemoryDatabase("LimsDb");
+            });
+
+
+            new Microsoft.AspNetCore.Mvc.MvcOptions();
+            AddDbContext<T>(this IServiceCollection services, Action<Microsoft.AspNetCore.Mvc.MvcOptions> options);
+            services.AddMvc( mvcOptions => {
+            });
+
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            app.UseMvc();
+            app.Use( async (ctx, next) => {
+
+                // do work before. resovle a service for instance.
+                var db = ctx.RequestServices.GetService<LimsContext>();
+
+                //execute next pipeline.
+                //var test = next.Invoke();
+                //or
+                //var test = next();
+
+                //do other work while
+                if(db.TestMethods.Count() == 0)
+                {
+                    var testMethod = new Models.TestMethod() { 
+                        Id = 1, 
+                        Test = new Models.Test() {
+                            Id = 1,
+                            Name = "TestTest",
+                            Description = "Just a test Test"
+                        },
+                        Method = new Models.Method() {
+                            Id = 1,
+                            Name = "TestMethod",
+                            Description = "Just a test Method"
+                        }
+                    };
+                    db.Add(testMethod);
+                    db.SaveChanges();
+                }
+                ctx.Response.Headers.Add("InlineUseCustomHeader", "Hiba");
+
+                await next();
+
+                //do work after
+            } );
+
+            //case where you don't need to append work to the response on the way back the pipeline
+            app.Use((ctx, next) => {
+
+                // do work before. resovle a service for instance.
+                var db = ctx.RequestServices.GetService<LimsContext>();
+
+                //execute next pipeline.
+                var test = next();
+
+                //do other work while
+
+                return test;
+            } );
+
+            // app.Use( next => {
+            //     var opts = new Microsoft.AspNetCore.Http.Features.FormOptions(){  };
+            //     var newContext = new Microsoft.AspNetCore.Http.HttpContextFactory(Options.Create<Microsoft.AspNetCore.Http.Features.FormOptions>(opts));
+            //     return next.Invoke(newContext.Create());
+            // } );
+
+            app.UseCustomMiddleware().UseAnotherCustomMiddleware();
+
+
+            app.UseMvcWithDefaultRoute();
+            DirectoryBrowserOptions options = new DirectoryBrowserOptions();
+            options.RequestPath = "";
+            options.FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider("");
+            options.FileProvider = new CustomFileProvider();
+            app.UseDirectoryBrowser();
+            app.UseStaticFiles();
+
+
+            //executes at the end of the pipeline
+            app.Run( async ctx => {
+
+                byte[] buffer = System.Text.ASCIIEncoding.UTF8.GetBytes("Yellow World");
+                await ctx.Response.Body.WriteAsync(buffer, 0, buffer.Length);
+
+            });
+        }
+    }
+
+    public class CustomFileInfo : IFileInfo
+    {
+        //
+        // Summary:
+        //     True if resource exists in the underlying storage system.
+        public bool Exists { get; }
+        //
+        // Summary:
+        //     The length of the file in bytes, or -1 for a directory or non-existing files.
+        public long Length { get; }
+        //
+        // Summary:
+        //     The path to the file, including the file name. Return null if the file is not
+        //     directly accessible.
+        public string PhysicalPath { get; }
+        //
+        // Summary:
+        //     The name of the file or directory, not including any path.
+        public string Name { get; }
+        //
+        // Summary:
+        //     When the file was last modified
+        public DateTimeOffset LastModified { get; }
+        //
+        // Summary:
+        //     True for the case TryGetDirectoryContents has enumerated a sub-directory
+        public bool IsDirectory { get; }
+
+        //
+        // Summary:
+        //     Return file contents as readonly stream. Caller should dispose stream when complete.
+        //
+        // Returns:
+        //     The file stream
+        public Stream CreateReadStream() { return new System.IO.MemoryStream(); }
+    }
+    public class CustomFileProvider : IFileProvider, IDisposable
+    {
+        public IFileInfo GetFileInfo(string file) { return new Microsoft.Extensions.FileProviders.NotFoundFileInfo(""); }
+        public IDirectoryContents GetDirectoryContents(string dir) { return new NotFoundDirectoryContents(); }
+
+        public Microsoft.Extensions.Primitives.IChangeToken Watch(string filter) { return NullChangeToken.Singleton; }
+
+        public void Dispose() { }
+    }
+
+    public class CustomActionFilterAttribute : Microsoft.AspNetCore.Mvc.Filters.ActionFilterAttribute
+    {
+        public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context) { }
+        public override void OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext context) { }
+        public override void OnResultExecuting(Microsoft.AspNetCore.Mvc.Filters.ResultExecutingContext context) { }
+        public override void OnResultExecuted(Microsoft.AspNetCore.Mvc.Filters.ResultExecutedContext context) { }
+    }
+
+    public class SomeController : Microsoft.AspNetCore.Mvc.Controller
+    {
+        public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context) { }
+        public override void OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext context) { }
+
+        [CustomActionFilter]
+        [HttpDelete]
+        [HttpGet]
+        [HttpGet("/")]
+        [HttpGet("/someotherGetRoute")]
+        [HttpHead]
+        [HttpOptions]
+        [HttpPatch]
+        [HttpPost]
+        [HttpPut]
+        [RequireHttps]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        [AcceptVerbs("GET", "POST", "PUT")]
+        [ActionName("somewhere")]
+        [Route("/Some/Route")]
+        [Route("/[controller]/[action]/{id:int?}")]
+        [Route("/[controller]/[action]/{*url}")]
+        [Route("/[controller]/{id:int?}")]
+        [NonAction]
+        [ValidateAntiForgeryToken]
+        [AutoValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken]
+        public Microsoft.AspNetCore.Mvc.IActionResult Index()
+        {
+            Content();
+            View();
+            Accepted();
+            Created();
+            NoContent();
+            Json();
+            File();
+            StatusCode();
+            BadRequest();
+            PhysicalFile();
+            Redirect();
+            AcceptedAtAction();
+            AcceptedAtRoute();
+            PartialView();
+            /*
+            Type 	                    Description
+            AcceptedResult              Returns a 202 status code. In addition, it returns the URI to check on the ongoing status of the request. The URI is stored in the Location header.
+            BadRequestResult 	        Returns a 400 status code.
+            CreatedResult               Returns a 201 status code. In addition, it returns the URI of the resource created, stored in the Location header.
+            NoContentResult 	        Returns a 204 status code and null content.
+            OkResult 	                Returns a 200 status code.
+            UnsupportedMediaTypeResult 	Returns a 415 status code.
+            */
+            
+            return new CustomActionResult();
+        }
+    }
+
+    public class AlwaysFailAttribute : Attribute, Microsoft.AspNetCore.Mvc.ActionConstraints.IActionConstraint
+    {
+        public int Order { get; private set; }
+        public bool Accept(Microsoft.AspNetCore.Mvc.ActionConstraints.ActionConstraintContext context)
+        {
+            //context.RouteContext.HttpContext.Request
+            return false;
+        }
+    }
+
+    public class NoSomething : Microsoft.AspNetCore.Mvc.ActionConstraints.ActionMethodSelectorAttribute
+    {
+        public override bool IsValidForRequest(Microsoft.AspNetCore.Routing.RouteContext routeContext, Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor action)
+        {
+            return false;
+        }
+    }
+
+    public class OverridedController : Microsoft.AspNetCore.Mvc.Controller
+    {
+        public OverridedController() : base() { }
+
+        public CustomActionResult CustomAction(){ return new CustomActionResult(); }
+    }
+
+    public class CustomOverridedController : OverridedController
+    {
+        [Route("/Ello")]
+        public IActionResult Index() 
+        {
+            return CustomAction();
+        }
+    }
+
+    public class CustomActionResult : IActionResult
+    {
+        public Task ExecuteResultAsync(ActionContext ctx)
+        {
+            // ctx.HttpContext.Request.Cookies[""];
+            // ctx.HttpContext.Request.Body;
+            // ctx.HttpContext.Request.Headers;
+            // ctx.HttpContext.Request.QueryString
+            // ctx.HttpContext.Request.Scheme
+            // ctx.HttpContext.Response.StatusCode;
+            // Microsoft.AspNetCore.Http.HttpContext
+            // Microsoft.AspNetCore.Http.HttpRequest
+            // Microsoft.AspNetCore.Http.HttpResponse
+            byte[] buffer = new byte[100];
+            return new MemoryStream().ReadAsync(buffer, 0, 99);
+        }
+    }
+
+
+    public class CustomView : Microsoft.AspNetCore.Mvc.ViewEngines.IView
+    {
+
+    }
+
+    public class CustomViewEngine : Microsoft.AspNetCore.Mvc.ViewEngines.IViewEngine
+    {
+        
+    }
+
+    public class CustomRazorView : Microsoft.AspNetCore.Mvc.Razor.RazorView
+    {
+         public CustomRazorView(Microsoft.AspNetCore.Mvc.Razor.IRazorViewEngine viewEngine, Microsoft.AspNetCore.Mvc.Razor.IRazorPageActivator pageActivator, System.Collections.Generic.IReadOnlyList<Microsoft.AspNetCore.Mvc.Razor.IRazorPage> viewStartPages, Microsoft.AspNetCore.Mvc.Razor.IRazorPage razorPage, System.Text.Encodings.Web.HtmlEncoder htmlEncoder, System.Diagnostics.DiagnosticSource diagnosticSource)
+         : base(viewEngine, pageActivator, viewStartPages, razorPage, htmlEncoder, diagnosticSource)
+         {
+             
+         }
+
+        public override System.Threading.Tasks.Task RenderAsync(Microsoft.AspNetCore.Mvc.Rendering.ViewContext context){
+
+            //you can override the default razor view functionality adding your own
+            //then at the Razor View level *.cshtml . use the keyword @inherit CustomRazorView
+
+
+            // return System.Threading.Tasks.Task.Run(() => {
+            //     Console.WriteLine("yellow");
+            // });
+            
+            return base.RenderAsync(context);
+        }
+    }
+
+
+    public static class MiddlewareExtensions
+    {
+        public static IApplicationBuilder UseCustomMiddleware(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<CustomMiddleware>();
+            return app;
+        }
+        public static IApplicationBuilder UseAnotherCustomMiddleware(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<AnotherCustomMiddleware>();
+            return app;
+        }
+    }
+
+    public class CustomMiddleware
+    {
+        public Microsoft.AspNetCore.Http.RequestDelegate _next { get; private set; }
+        public CustomMiddleware(Microsoft.AspNetCore.Http.RequestDelegate next)
+        {
+            _next = next;
+        }
+        public async Task Invoke(Microsoft.AspNetCore.Http.HttpContext ctx)
+        {
+            //do work before
+            ctx.Response.Headers.Add("CustomHeader", "Mohammad");
+            await _next.Invoke(ctx);
+            //do work after
+            // ctx.Response.Headers.Add("CustomHeader", "Mohammad");
+        }
+    }
+
+
+    public class AnotherCustomMiddleware
+    {
+        public Microsoft.AspNetCore.Http.RequestDelegate _next { get; private set; }
+        public AnotherCustomMiddleware(Microsoft.AspNetCore.Http.RequestDelegate next)
+        {
+            _next = next;
+        }
+        public Task Invoke(Microsoft.AspNetCore.Http.HttpContext ctx)
+        {
+            //do work before
+            ctx.Response.Headers.Add("AnotherCustomHeader", "Hiba");
+            return _next.Invoke(ctx);
+        }
+    }
+
+}
+
+
+
+
+
+//to use logging
+using Microsoft.Extensions.Logging;
+public class CustomLogger : Microsoft.Extensions.Logging.ILogger
+{
+    public class LogScope : IDisposable
+    {
+        public void Dispose()
+        {
+
+        }
+    }
+    public IDisposable BeginScope<TState>(TState state)
+    {
+        return new LogScope();
+    }
+    public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel)
+    {
+        return true;
+    }
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+    {
+
+    }
+    public void WriteMessage(string message)
+    {
+        Console.WriteLine(message);
+        System.Diagnostics.Debug.WriteLine(message);
+    }
+}
+
+//Microsoft.AspNetCore.Mvc;
+//Microsoft.AspNetCore.Mvc.MvcOptions
+
+//Microsoft.AspNetCore.Builder.IApplicationBuilder
+//Microsoft.Extensions.DependencyInjection.IServiceCollection
+//Microsoft.AspNetCore.Hosting.IHostingEnvironment
+//Microsoft.Extensions.Logging.ILoggerFactory
+//Microsoft.Extensions.Logging.ILogger
+var logger = (new Microsoft.Extensions.Logging.LoggerFactory()).CreateLogger("CategoryName");
+
+using(var scope = logger.BeginScope("yellow"))
+{
+    ((Microsoft.Extensions.Logging.Console.ConsoleLogger)logger).WriteMessage(Microsoft.Extensions.Logging.LogLevel.Information, "Log Name", 1, "Something", new System.Exception("Some Error"));
+    ((CustomLogger)logger).WriteMessage("yellow");
+}
+
+
+//Microsoft.Extensions.Configuration.IConfiguration
+Configuration.Bind()
+Configuration.GetSection("");
+Configuration.GetValue<string>("{someSection:{someKey:someValue}}", "defualtvalue");
+
+
+//Microsoft.AspNetCore.Authorization.AuthorizationOptions
+//Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder
+//Microsoft.AspNetCore.Authentication.AuthenticationOptions
+//System.Security.Claims.Claim
+//System.Security.Claims.ClaimTypes
+//System.Security.Cryptography
+//System.Security.Principal
+//System.Security.Permissions
+
+
+//Microsoft.AspNetCore.Authorization.IAuthorizationRequirement
+//Microsoft.AspNetCore.Authorization.AuthorizationHandler
+
+//Microsoft.AspNetCore.Authorization.IAuthorizationService
+//Injected by default into DI by services.AddAuthorization() [ex. services.AddTransient<Microsoft.AspNetCore.Authorization.IAuthorizationService>(some instance)]
+
+
+/Microsoft.AspNetCore.Mvc.Filters.IActionFilter
+/Microsoft.AspNetCore.Mvc.Filters.IAsyncActionFilter
+
+/Microsoft.AspNetCore.Mvc.Filters.IAuthorizationFilter
+/Microsoft.AspNetCore.Mvc.Filters.IAsyncAuthorizationFilter
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+New
+*/
+
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Logging;
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
+using System.Security.Claims;
+
+using Microsoft.Extensions.DependencyInjection;
+IServiceProvider
+IServiceProvider.GetService
+IServiceProvider.GetServices
+IServiceProvider.CreateScope
+IServiceCollection
+IServiceCollection.Add
+
+using Microsoft.AspNetCore.Builder;
+IApplicationBuilder
+IApplicationBuilder.Use
+IApplicationBuilder.Run
+IApplicationBuilder.Use( (httpContext, next) => {})
+IApplicationBuilder.Run( async ctx => {
+	byte[] buffer = System.Text.ASCIIEncoding.UTF8.GetBytes("Yellow World");
+	await ctx.Response.Body.WriteAsync(buffer, 0, buffer.Length);
+});
+
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Authorization;
+IServiceCollection.AddAuthorization(options => {
+    // options.AddPolicy("MustBeMOA995", policy => {
+    //     policy.AddRequirements(new TestPolicyRequirement("moa995"));
+    // });
+});
+services.Configure<Microsoft.AspNetCore.Authorization.AuthorizationOptions>( options => {
+    options.AddPolicy("MustBeMOA995", policy => {
+        policy.Requirements.Add(new TestPolicyRequirement("moa995"));
+    });
+    options.AddPolicy("MustBeAuthenticated", policy => {
+        policy.RequireAuthenticatedUser();
+    });
+    options.AddPolicy("MustHaveAdminClaim", policy => {
+        policy.RequireClaim(ClaimTypes.Role , "admin");
+    } );
+    options.AddPolicy("MustHaveMOA995Claim", policy => {
+        policy.RequireClaim(ClaimTypes.Name , "moa995");
+    } );
+} );
+
+using Microsoft.AspNetCore.Authorization;
+services.AddAuthorization =>
+AuthorizationService.AuthorizeAsync(user, resource, policyName);
+
+services.AddIdentity =>
+
+UserManager
+
+IUserStore
+IClaimStore
+IEmailStore
+ILoginStore
+IUserValidator
+PassworHasher<TUser>
+
+IdentityUser
+IdentityUserClaim
+IdentityUserRole
+IdentityUserToken
+
+services.AddIdentity
+services.AddIdentityCore
+services.AddMvc
+services.AddMvcCore
+app.UseMvc
+services.AddAuthorization
+services.AddAuthentication
+app.UseAuthentication
+
+IAuthorizationRequirement
+AuthorizationHandler<TRequirement>
+
+Mvc.Filters.IActionFilter
+Mvc.Filters.IAsyncActionFilter
+Mvc.Filters.IAsyncAuthorizationFilter
+
+UserManager
+IUserValidator
+IPasswordValidator
+PasswordHasher<TUser>
+IAuthorizationService
+ILoggerFactory
+IApplicationBuilder
+IServiceCollection
+
+
+IUserStore
+IUserClaimStore
+
+IdentityContext : DBContext
+{
+	DbSet<IdentityUser> Users
+	DbSet<IdentityUserClaim> Claims
+}
+
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+PassworHasher<TUser>.HashPassword
+PassworHasher<TUser>.VerifyPassword
+using Microsoft.EntityFrameworkCore;
+
+
+/***********
+Identity
+***********/
+public class TestUserIdentity : IdentityUser<int>
+public class TestUserClaim : IdentityUserClaim<int>
+public class TestUserStore : IUserStore<TestUserIdentity>
+
+public class TestUserValidator : IUserValidator<TestUserIdentity>
+{
+	public Task<IdentityResult> ValidateAsync(UserManager<TestUserIdentity> manager, TestUserIdentity user);
+}
+public class TestPasswordHasher : IPasswordHasher<IdentityUser>
+{
+	
+}
+
+
+/***********
+DBContext
+***********/
+
+
+
+[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+[Column]
+[Table]
+[NotMapped]
+//RowID equivalent
+[Timestamp]
+
+builder.Entity<TestUserIdentity>().ToTable("Users").HasDiscriminator<string>("UserType").HasValue<TestUserEmployeeIdentity>("Employee").HasValue<TestUserCustomerIdentity>("Customer");
+builder.Entity<TestUserIdentity>().ToTable("Users").HasDiscriminator<UserTypes>("UserType").HasValue<TestUserEmployeeIdentity>(UserTypes.Employee).HasValue<TestUserCustomerIdentity>(UserTypes.Customer);
+
+public class IdentityContext : DbContext
+{
+	public DbSet<TestUserIdentity> Users { get; set; }
+	public DbSet<TestUserClaim> Claims { get; set; }
+
+	private IServiceProvider _provider;
+
+	public IdentityContext( IServiceProvider serviceProvider )
+	{
+		_provider = serviceProvider;
+	}
+
+	protected override void OnConfiguring(DbContextOptionsBuilder options)
+	{
+
+		options.UseInMemoryDatabase("IdentityDB");
+		base.OnConfiguring(options);
+	}
+	
+	protected override void OnModelCreating(ModelBuilder builder)
+	{
+		builder.Entity<TestUserIdentity>().HasKey( i => i.Id );
+		builder.Entity<TestUserIdentity>().HasMany( i => i.Claims ).WithOne( c => c.User );
+
+		builder.Entity<TestUserClaim>().HasKey( c => c.Id );
+		builder.Entity<TestUserClaim>().HasOne( c => c.User );
+
+		var cryptography = _provider.GetService<Cryptography>();
+
+		builder.Entity<TestUserIdentity>().HasData( new TestUserIdentity { UserName = "moa995", PasswordHash = cryptography.Encrypt("maa").ToString() } );
+		
+		base.OnModelCreating(builder);
+	}
+}
+
+
+
+/***********
+Authorization Policies
+***********/
+public class TestPolicyRequirement : IAuthorizationRequirement
+{
+	public string UserName { get; private set; }
+	public TestPolicyRequirement(string userName)
+	{
+		this.UserName = userName;
+	}
+}
+
+/*
+	In cases where you want evaluation to be on an OR basis, implement multiple handlers for a single requirement.
+	All requirement handlers will be excecuted. if one succeeds, policy succeeds.
+ */
+public class TestPolicyHandler : AuthorizationHandler<TestPolicyRequirement>
+{
+	protected override Task HandleRequirementAsync( AuthorizationHandlerContext context, TestPolicyRequirement requirement )
+	{
+		if( context.User != null && context.User.Identity.Name == requirement.UserName)
+			context.Succeed(requirement);
+		
+		return Task.CompletedTask;
+	}
+}
+
+//Handler for multiple requirements
+public class TestMultiplePolicyHandler : IAuthorizationHandler
+{
+	public Task HandleAsync(AuthorizationHandlerContext context)
+	{
+		foreach( var req in context.PendingRequirements.ToList() )
+		{
+			if(req is TestPolicyRequirement)
+				if(((TestPolicyRequirement)req).UserName == context.User.Identity.Name)
+					context.Succeed(req);
+		}
+		if(context.Resource is AuthorizationFilterContext ctx)
+			ctx.HttpContext.Response.Headers.Add("x-authorization-policy", ctx.ActionDescriptor.DisplayName);
+		return Task.CompletedTask;
+	}
+}
+
+
+
+
+
+/***********
+Action/Authorization Filters
+***********/
+public class TestActionFilter : Microsoft.AspNetCore.Mvc.Filters.IActionFilter
+{
+	public void OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext context)
+	{
+		context.HttpContext.Response.Headers.Add("x-action-filter", "action");
+	}
+	public void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+	{
+
+	}
+}
+
+public class TestActionFilterAsync : Microsoft.AspNetCore.Mvc.Filters.IAsyncActionFilter
+{
+	public Task OnActionExecutionAsync(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context, Microsoft.AspNetCore.Mvc.Filters.ActionExecutionDelegate next)
+	{
+		//do work
+		return next();
+	}
+}
+
+public class TestAuthorizationFilter : Microsoft.AspNetCore.Mvc.Filters.IAuthorizationFilter
+{
+	public void OnAuthorization(Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext context)
+	{
+		context.HttpContext.Response.Headers.Add("x-authorization-filter", context.HttpContext.User == null ? "Anonymous" : context.HttpContext.User.Identity.Name);
+	}
+}
+
+public class TestAuthorizationFilterAsync : Microsoft.AspNetCore.Mvc.Filters.IAsyncAuthorizationFilter
+{
+	public Task OnAuthorizationAsync(Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext context)
+	{
+		return Task.CompletedTask;
+	}
+}
+
+public class TestActionContraint : Microsoft.AspNetCore.Mvc.ActionConstraints.IActionConstraint
+{
+	public int Order { get { return 1; } }
+
+	public bool Accept(Microsoft.AspNetCore.Mvc.ActionConstraints.ActionConstraintContext context)
+	{
+		// context.RouteContext.HttpContext
+		// context.CurrentCandidate.Action
+		return true;
+	}
+}
+
+
+
+
+/***********
+Adding Middleware
+***********/
+public static class TestMiddlewareExtensions
+{
+	public static void AddTestServices(this IServiceCollection services)
+	{
+		services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, TestPolicyHandler>();
+		services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, TestMultiplePolicyHandler>();
+		services.AddTransient<TestUserValidator>();
+		
+		services.AddTransient<Cryptography>( provider => { return new Cryptography(DateTime.Now.Millisecond, 128); } );
+		//services.AddTransient<Cryptography>();
+
+		services.AddScoped<DbContext, IdentityContext>( provider => { return new IdentityContext(provider); } );
+
+		services.AddAuthorization(options => {
+			// options.AddPolicy("MustBeMOA995", policy => {
+			//     policy.AddRequirements(new TestPolicyRequirement("moa995"));
+			// });
+		});
+		services.Configure<Microsoft.AspNetCore.Authorization.AuthorizationOptions>( options => {
+			options.AddPolicy("MustBeMOA995", policy => {
+				policy.Requirements.Add(new TestPolicyRequirement("moa995"));
+			});
+			options.AddPolicy("MustBeAuthenticated", policy => {
+				policy.RequireAuthenticatedUser();
+			});
+			options.AddPolicy("MustHaveAdminClaim", policy => {
+				policy.RequireClaim(ClaimTypes.Role , "admin");
+			} );
+			options.AddPolicy("MustHaveMOA995Claim", policy => {
+				policy.RequireClaim(ClaimTypes.Name , "moa995");
+			} );
+		} );
+
+		//services.AddMvc().AddMvcOptions(opt => { opt.RequireHttpsPermanent = true; });
+		
+		// services.AddMvcCore( options => {
+		//     options.Filters.Add<TestActionFilter>(); 
+		//     options.Filters.Add<TestAuthorizationFilter>();
+		// } ).AddViews().AddJsonFormatters().AddRazorPages().AddRazorViewEngine();
+
+
+		services.AddMvcCore().AddViews().AddJsonFormatters().AddRazorPages().AddRazorViewEngine().AddAuthorization();
+		services.Configure<Microsoft.AspNetCore.Mvc.MvcOptions>( options => { 
+			options.Filters.Add<TestActionFilter>(); 
+			options.Filters.Add<TestAuthorizationFilter>();
+			//options.RequireHttpsPermanent = true;
+		});
+
+		// services.AddIdentity<TestUserIdentity, IdentityRole>( options => {
+		//     options.Lockout.MaxFailedAccessAttempts = 3;
+		// } ).AddUserStore<TestUserStore>().AddUserValidator<TestUserValidator>();
+		services.AddIdentityCore<TestUserIdentity>( config => {
+			config.Lockout.MaxFailedAccessAttempts = 3;
+		} ).AddUserStore<TestUserStore>().AddUserValidator<TestUserValidator>();
+
+		// services.Configure<IdentityOptions>( options => {
+		//     options.Lockout.MaxFailedAccessAttempts = 3;
+		// } );
+	}
+
+	public static void AddTestMiddleware(this IApplicationBuilder app)
+	{
+		//Microsoft.AspNetCore.Http.HttpContext httpContext
+		//System.Func<System.Threading.Tasks.Task>
+
+		app.Use( async (context, next) => {
+			// do something before
+			context.Response.Headers.Add("x-middleware", "yellow");
+			if(next != null)
+				await next();
+			//context.Response.Headers.Add("x-middleware-after", "yellow again");
+			//do something after
+		} );
+
+		app.Use( (httpContext, next) => {
+			//do something before
+			Task work = Task.CompletedTask;
+			if(next != null)
+				work = next();
+			//do something after
+
+			return work;
+		} );
+
+		app.UseMvc( options => {
+			/*
+			Route parameter names must be non-empty and cannot contain these characters: '{', '}', '/'.
+			The '?' character marks a parameter as optional, and can occur only at the end of the parameter.
+			The '*' character marks a parameter as catch-all, and can occur only at the start of the parameter.
+			*/
+			options
+			.MapRoute(
+				name: "default", 
+				template: "{controller}/{action}/{id?}",
+				defaults: new { controller = "Test", action = "TestAction" }
+			)
+			.MapRoute(
+				name: "shortcuts", 
+				template: "{action}/{id?}",
+				defaults: new { controller = "Test", action = "TestAction" }
+			)
+			.MapRoute(
+				name: "capture_all", 
+				template: "{*url}", 
+				defaults: new { controller = "Test", action = "CaptureAllAction" }
+			);
+		});
+
+		//executes at the end of the pipeline
+		app.Run( async ctx => {
+
+			byte[] buffer = System.Text.ASCIIEncoding.UTF8.GetBytes("Yellow World");
+			await ctx.Response.Body.WriteAsync(buffer, 0, buffer.Length);
+
+		});
+	}
+}

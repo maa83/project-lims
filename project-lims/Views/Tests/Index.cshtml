@@ -1,0 +1,181 @@
+
+
+
+
+<div class="ui top attached menu">
+    <!-- <a href="" class="right floated item">
+        <i class="cog icon"></i>
+        Item
+    </a> -->
+
+    <div class="ui dropdown icon item">
+        <i class="wrench icon"></i>
+        <!-- <div class="text">Settings</div> -->
+        <div class="menu">
+            <div class="item">
+                SomeItem
+            </div>
+        </div>
+    </div>
+</div>
+<div class="ui bottom attached segment" id="testsSegment">
+
+    <div class="ui double stackable grid">
+
+        <div class="two column centered row">
+            <div class="column" style="text-align: center">
+                <h3 class="ui icon header">
+                    <i class="flask icon"></i>
+                    <div class="content">
+                        Tests
+                        <div class="sub header">Manage Sample Tests</div>
+                    </div>
+                </h3>
+            </div>
+        </div>
+        
+        <div class="one column row">
+            <div class="column">
+    
+                <table class="ui compact celled definition table">
+                    <thead class="full-width">
+                        <tr>
+                            <th></th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Unit of Measurement</th>
+                            <th>Code</th>
+                            <th>Actions</th>
+                        </tr>
+                        <tr>
+                            <th colspan="4"></th>
+                            <th colspan="2" >
+                                <div class="ui form">
+                                    <div class="inline fields">
+                                        <div class="field">
+                                            <input type="text" placeholder="Search" />
+                                        </div>
+                                        <button class="ui right floated button">
+                                            <i class="search icon"></i> Search
+                                        </button>
+                                    </div>
+                                </div>
+                            </th>
+                                
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <td class="collapsing">
+                            <div class="ui fitted slider checkbox">
+                                <input type="checkbox"> <label></label>
+                            </div>
+                        </td>
+                        <td>
+                            Some Test
+                        </td>
+                        <td>
+                            Some Test Description
+                        </td>
+                        <td>
+                            Km/S
+                        </td>
+                        <td>TK-SP</td>
+                        <td class="collapsing">
+                            <button class="ui icon basic small button" id="testDeleteButton" data-tooltip="delete test" data-inverted="">
+                                <i class="times icon"></i> 
+                            </button>
+                            <button class="ui icon basic small button" id="testEditButton" data-tooltip="edit test" data-inverted="">
+                                <i class="edit icon"></i>
+                            </button>
+                        </td>
+                    </tbody>
+                    <tfoot class="full-width">
+                        <th></th>
+                        <th colspan="5">
+                            <button class="ui small negative button">Delete</button>
+                            <button class="ui small negative button">Delete All</button>
+                            <button id="testAddButton" name="testAddButton" class="ui right floated small primary button">
+                                <i class="plus icon"></i> Add New
+                            </button>
+                        </th>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+<div class="ui small modal" id="testAddModal">
+    <div class="header">
+        <h2>Add New Test</h2>
+    </div>
+
+    <!-- <div class="description">
+        <h4>Test Details</h4>
+    </div> -->
+
+    <div class="content">
+        <div class="ui form">
+            <div class="ui dividing header">Test Parameter Details</div>
+            <div class="three fields">
+                <div class="field">
+                    <label for="">Name</label>
+                    <input type="text" />
+                </div>
+                <div class="field">
+                    <label for="">Unit</label>
+                    <input type="text" />
+                </div>
+                <div class="field">
+                    <label for="">Code</label>
+                    <input type="text" />
+                </div>
+            </div>
+            <div class="field">
+                <label for="">Description</label>
+                <textarea name="" id="" cols="30" rows="10"></textarea>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <label for="">Matrices</label>
+                    <select name="" id="" class="ui search selection dropdown" multiple="">
+                        <option value="1">Matrix 1</option>
+                        <option value="2">Matrix 2</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="">Methods</label>
+                    <select name="" id="" class="ui search selection dropdown" multiple="">
+                        <option value="1">Method 1</option>
+                        <option value="2">Method 2</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <button class="ui basic negative button">
+            <i class="times icon"></i> Cancel
+        </button>
+        <button class="ui basic positive button">
+            <i class="check icon"></i> Add
+        </button>
+    </div>
+</div>
+
+<script>
+    addEventListener('DOMContentLoaded', (e) => { 
+
+
+        var el = document.querySelector('button#testAddButton');
+        var mEl = document.querySelector('div.modal#testAddModal');
+        modal(el, mEl);
+        el = document.querySelector('button#testEditButton');
+        modal(el, mEl);
+
+        console.log('DOM loaded');
+    } );
+</script>

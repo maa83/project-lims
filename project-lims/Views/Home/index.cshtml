@@ -1,0 +1,819 @@
+
+<div id="main">
+
+</div>
+
+<!-- <script src="../../ui/app/components.js"></script> -->
+
+<script>
+
+    const SPA = (() => {
+        const defState = {
+            customers: [],
+            contacts: [],
+            matrices: [],
+            testParameters: [],
+            testParameterMethods: [],
+            user: null,
+            url: ''
+        };
+        const actions = {
+            SET_CUSTOMERS: (customers) => {
+                return { customers };
+            },
+            SET_CONTACTS: contacts => ({contacts}),
+            SET_MATRICES: matrices => ({matrices}),
+            SET_TEST_PARAMETERS: testParameters => ({testParameters}),
+            SET_TEST_PARAMETERS_METHODS: testParametersMethods => ({testParametersMethods}),
+            CLEAR: () => {
+                return Object.assign({...defState}, { customers: [], contacts: [] });
+            }
+        };
+
+        let SPA = {
+            Common: {
+                dateFormat: 'YYYY-MM-DD',
+                dateTimeFormat: 'YYYY-MM-DD hh:mm:ss',
+                moneyFormat: '0.000',
+                toDateFormat: (date) => { return moment(date).format(SPA.Common.dateFormat); },
+                toDateTimeFormat: (date) => { return moment(date).format(SPA.Common.dateTimeFormat); },
+
+                toMoneyFormat: (val) => { return numeral(val).format(SPA.Common.moneyFormat); },
+
+                fromDateFormat: (date) => { return moment(date, SPA.Common.dateFormat).toDate(); },
+                fromDateTimeFormat: (date) => { return moment(date, SPA.Common.dateTimeFormat).toDate(); },
+
+                toInteger: function (val) {
+                    let value = Number.parseInt(val);
+                    return Number.isNaN(value)? '' : value;
+                },
+
+                toFloat: function (val, round=2) {
+                    let value = Number.parseFloat(val), power = Math.pow(10, round);
+                    return Number.isNaN(value) ? '' : Math.round(value*power)/power;
+                },
+
+                setInteger: function (callback, val) {
+                    let { toInteger } = SPA.Common;
+                    callback(toInteger(val));
+                },
+
+                setFloat: function (callback, val, round=2) {
+                    let { toFloat } = SPA.Common;
+                    callback(toFloat(val, round));
+                }
+            }
+        }
+        assignStore(SPA, defState, actions);
+
+        return SPA;
+    })();
+
+
+    class SampleAddModule
+    {
+        constructor(){
+
+        }
+
+        oninit() {
+            let ctx = this;
+            let { fromDateFormat, toFloat } = SPA.Common;
+
+            let defState = {
+                code: '',
+                location: '',
+                receivedDate: moment().format(SPA.Common.dateFormat),
+                matrixId: 0,
+
+                samplingPoint: '',
+                samplingDate: moment().add(-3, 'day').format(SPA.Common.dateFormat),
+                samplingBy: '',
+                samplingTemprature: 20.5,
+                remarks: '',
+
+                selectedTestParameter: {},
+                selectedMethod: {},
+
+                matrices: [],
+                matrixTestParameters: [],
+                testParameterMethods: [],
+
+                sampleTestParameters: []
+            };
+
+            const actions = {
+                SET_CODE: code => ( { code: code.toUpperCase() } ),
+                SET_LOCATION: location => { return { location: _.startCase(location) }; },
+                SET_RECEIVED_DATE: date => ({ receivedDate: fromDateFormat(date) }),
+
+                SET_SAMPLING_POINT: point => ( { samplingPoint: point } ),
+                SET_SAMPLING_DATE: date => ( { samplingDate: date } ),
+                SET_SAMPLING_BY: samplingBy => ( { samplingBy: _.startCase(samplingBy) } ),
+                SET_SAMPLING_TEMPRATURE: temp => ( { samplingTemprature: toFloat(temp) } ),
+                SET_REMARKS: remarks => ({remarks}),
+
+                SELECT_MATRIX: matrixId => ({ matrixId }),
+                SELECT_TEST_PARAMETER: (testParameter) => ({ selectedTestParameter: testParameter }),
+                SELECT_TEST_PARAMETER_METHOD: (method) => ({ selectedMethod: method }),
+
+                SET_MATRICES: (matrices) => ({ matrices }),
+                SET_MATRIX_TEST_PARAMETERS: (testParameters) => { return { matrixTestParameters: testParameters }; },
+                SET_TEST_PARAMETER_METHODS: methods => { return { testParameterMethods: methods }; },
+                CLEAR_MATRICES: () => ({ matrices: [] }),
+                CLEAR_MATRIX_TEST_PARAMETERS: () => { return { matrixTestParameters: [] }; },
+                CLEAR_TEST_PARAMETER_METHODS: () => ({ testParameterMethods: [] }),
+
+
+                ADD_SAMPLE_TEST_PARAMETER: (parameter, { sampleTestParameters }) => {
+                    sampleTestParameters.push(parameter);
+                    // let newArr = sampleTestParameters.map((testParameter) => { return new TestParameterViewModel(testParameter  ); });
+                    // return {sampleTestParameters: newArr};
+                    let newArr = [...sampleTestParameters];
+                    return { sampleTestParameters: newArr }; 
+                },
+                REMOVE_SAMPLE_TEST_PARAMETER: (id, { sampleTestParameters }) => {
+                    let removed = _.remove(sampleTestParameters, (test) => test.testParameterId == id );
+                    return { sampleTestParameters: [...sampleTestParameters] };
+                },
+                CLEAR_SAMPLE_TEST_PARAMETERS: () => { return { sampleTestParameters: [] } },
+                CLEAR_ALL: ({matrices}) => { 
+                    //ctx.matrixDropdownHandle.clear();
+                    return Object.assign({...defState}, { matrices, sampleTestParameters: [], matrixTestParameters: [], matrixMethods: [] });
+                }
+            };
+
+            //Creates this.store. this.{setCode, setLocation, ...}
+            assignStore(ctx, defState, actions);
+            let { setMatrices } = ctx;
+
+            DataManagers.TestParameters.GetAllMatrices().then( matrices => { setMatrices(matrices); m.redraw(); } ).catch( error => console.log(error) );
+
+            // let store = this.store;
+            // this.logger = store.subscribe( () => { 
+            //     console.log(store.getState());
+            // } );
+
+            //handles: { matrixDropDownHandle: { clear }, modalHandle: { show, hide } }
+        }
+
+        oncreate() {
+
+        }
+
+        onremove(){
+            this.clearAll();
+            delete this.matrixDropdownHandle;
+            delete this.testParameterMethodDropDown;
+            delete this.testParameterDropDown;
+            delete this.store;
+        }
+
+        clear() {
+            //this.clearTestParameters();
+            this.clearAll();
+            this.matrixDropdownHandle.clear();
+            this.testParameterMethodDropDown.clear();
+            this.testParameterDropDown.clear();
+        }
+
+        validate() {
+            let state = this.store.geState();
+            let requiredFields = ['code', 'location', 'testParameters', 'receivedDate', 'matrixId', 'samplingPoint', 'samplingDate', 'samplingBy', 'samplingTemprature'];
+            for(let prop in state) {
+                if(state[prop] instanceof Array)
+                    if(state[prop].length <= 0)
+                        return false;
+                // if(state[prop])
+            }
+            
+        }
+
+
+        onremove() {
+            delete this.matrixDropdownHandle;
+            delete this.testParameterMethodDropDown;
+            delete this.testParameterDropDown;
+        }
+
+        view() {
+            let ctx = this;
+            let store = ctx.store;
+            let currentState = store.getState();
+
+            let { toDateFormat } = SPA.Common;
+
+            let { setCode ,setLocation ,setReceivedDate ,setSamplingPoint ,setSamplingDate ,setSamplingBy ,setSamplingTemprature ,selectMatrix ,
+            selectTestParameter, selectTestParameterMethod ,addSampleTestParameter ,removeSampleTestParameter ,clearSampleTestParameters,
+            setMatrixTestParameters, setTestParameterMethods, clearMatrixTestParameters, clearTestParameterMethods, setRemarks } = ctx;
+
+            let { matrices, matrixId, selectedTestParameter, selectedMethod, matrixTestParameters: testParameters, testParameterMethods,
+                code, location, receivedDate,
+                samplingBy, samplingDate, samplingPoint, samplingTemprature, remarks } = currentState;
+
+            let selectedTestParameterId = selectedTestParameter? selectedTestParameter.id : null;
+            let selectedMethodId = selectedMethod? selectedMethod.id : null;
+
+            //extra step to ensure availability of testParameters
+            // if(matrixId && testParameters.length <= 0) {
+            //     testParameters = DataManagers.TestParameters.GetByMatrixId(matrixId);
+            //     setMatrixTestParameters(testParameters);
+            // }
+            // if(matrixId && methods.length <= 0>) {
+            //     methods = DataManagers.TestParameters.GetMethodsByMatrixId(matrixId);
+            // }
+            // if(selectedTestParameterId) {
+            //     if(!selectedTestParameter.methods || selectedTestParameter.methods.length <= 0)
+            //         selectedTestParameter.loadMethods().then( methods => { testParameterMethods = methods; m.redraw(); } );
+            //     //testParameterMethods = selectedTestParameter.methods;
+            // }
+
+            var icon = 'boxes';
+            var iconEl = ['i.', icon, '.icon'].join('');
+
+            return m('.ui.stackable.grid', [
+                m('.two.column.centered.row', m('.column', { style: { textAlign: 'center' } }, m('.ui.icon.header', [
+                    m(iconEl),
+                    m('.content', 'New Sample', m('.sub.header', 'Enter new sample details'))
+                ]))),
+
+                m('.row', [
+                    m('.column', 
+                        m('.ui.form', [
+                            m('.ui.dividing.header', 'Initial Details'),
+                            m('.four.fields', [
+                                m('.field', [
+                                    LabelComponent('Code', 'code'),
+                                    m('input[type=text][name=code]', { value: code, onchange: m.withAttr('value', (val) => { setCode(val); }) })
+                                ]),
+                                m('.field', [
+                                    LabelComponent('Location', 'location'),
+                                    m('input[type=text][name=location]', { value: location, onchange: m.withAttr('value', (val) => { setLocation(val); }) })
+                                ]),
+                                m('.field', [
+                                    LabelComponent('Received Date', 'receivedDate'),
+                                    m('input[type=date][name=receivedDate]', { value: toDateFormat(receivedDate), onchange: m.withAttr('value', (val) => { setReceivedDate(val); }) })
+                                ]),
+                                m('.field', [
+                                    m('label[for=matrix]', 'Matrix'),
+                                    m(DropDownComponent, {
+                                        text: 'Select Matrix ...',
+                                        oncreate: (({state, dom}) => {
+                                            this.matrixDropdownHandle = state.createHandle(dom);
+                                        }).bind(this),
+                                        items: matrices,
+                                        onchange: (id) => {
+                                            selectMatrix(id);
+                                            selectTestParameter(null);
+                                            selectTestParameterMethod(null);
+                                            clearMatrixTestParameters();
+                                            if(id) DataManagers.TestParameters.GetByMatrixId(id).then( testParameters => { setMatrixTestParameters(testParameters); m.redraw(); } );
+                                            clearSampleTestParameters();
+
+                                            //clearing testParameters and methods is enough to clear the dropdowns
+                                            // ctx.testParameterMethodDropDown.clear();
+                                            // ctx.testParameterDropDown.clear();
+                                        },
+                                        value: matrixId
+                                    })
+                                ]),
+                            ]),
+
+                            m('.ui.dividing.header', 'Sampling Details'),
+
+                            m('.four.fields', [
+                                FieldComponent({
+                                    type: 'text',
+                                    name: 'samplingPoint',
+                                    value: samplingPoint,
+                                    onchange: (val) => { setSamplingPoint(val); }
+                                }),
+                                FieldComponent({
+                                    type: 'date',
+                                    name: 'samplingDate',
+                                    title: 'Sampling Date',
+                                    value: samplingDate,
+                                    onchange: (val) => { setSamplingDate(val); }
+                                }),
+                                FieldComponent({
+                                    type: 'text',
+                                    name: 'samplingBy',
+                                    value: samplingBy,
+                                    onchange: (val) => { setSamplingBy(val); }
+                                }),
+                                FieldComponent({
+                                    type: 'text',
+                                    name: 'samplingTemprature',
+                                    value: samplingTemprature,
+                                    onchange: (val) => { setSamplingTemprature(val); }
+                                })
+                            ]),
+
+                            m('.ui.dividing.header', 'Remarks'),
+                            m('.field', [
+                                m('textarea[name=remarks][id=remarks]', {
+                                    value: remarks,
+                                    onchange: m.withAttr('value', setRemarks)
+                                })
+                            ]),
+
+                            m('.ui.dividing.header', 'Test Details'),
+
+                            
+                            m('table.ui.compact.celled.table', [
+                                m('thead', [
+                                    m('tr', [
+                                        m('th.five.wide.column', 'Parameter'),
+                                        m('th.two.wide.column', 'Code'),
+                                        m('th.four.wide.column', 'Method'),
+                                        m('th.two.wide.column', 'Unit'),
+                                        m('th', 'Price'),
+                                        m('th', 'Actions')
+                                    ])
+                                ]),
+                                m('tbody', [
+                                    currentState.sampleTestParameters.map((test) => {
+                                        return m('tr', [
+                                            m('td', test.testParameterName),
+                                            m('td', test.testParameterCode),
+                                            m('td', test.methodName),
+                                            m('td', test.methodUnit),
+                                            m('td', SPA.Common.toMoneyFormat(test.testParameterMethodPrice)),
+                                            m('td.collapsing', [
+                                                m('.ui.small.basic.icon.button[data-tooltip=delete][data-inverted]', { onclick: () => {
+                                                    removeSampleTestParameter(test.testParameterId);
+                                                 } }, m('i.times.icon')),
+                                                m('.ui.small.basic.icon.button[data-tooltip=edit][data-inverted]', m('i.edit.icon'))
+                                            ])
+                                        ])
+                                    })
+                                ]),
+                                m('tfoot', [
+                                    m('tr', [
+                                        m('th[colspan=2].field', [
+                                            m(DropDownComponent, {
+                                                name: 'testParameterId',
+                                                items: testParameters,
+                                                value: selectedTestParameterId,
+                                                onchange: (id) => {
+                                                    let val = id? testParameters.find( testParameter => (testParameter.id == id) ) : null;
+                                                    selectTestParameter(val);
+                                                    selectTestParameterMethod(null);
+                                                    if(val) val.loadMethods().then( methods => { setTestParameterMethods(methods); m.redraw(); } );
+                                                    //or
+                                                    //DataManagers.TestParameters.GetMethods(val.id).then( methods => { setTestParameterMethods(methods); m.redraw(); } );
+                                                },
+                                                oncreate: ({state, dom}) => { ctx.testParameterDropDown = state.createHandle(dom);  }
+                                            })
+                                        ]),
+                                        m('th[colspan=3].field', [
+                                            m(DropDownComponent, {
+                                                name: 'testParameterMethodId',
+                                                items: testParameterMethods,
+                                                value: selectedMethodId,
+                                                onchange: (id) => {
+                                                    let val = id? testParameterMethods.find( method => (method.id == id) ) : null;
+                                                    selectTestParameterMethod(val);
+                                                },
+                                                oncreate: ({state, dom}) => { ctx.testParameterMethodDropDown = state.createHandle(dom);  }
+                                            })
+                                        ]),
+                                        m('th', [
+                                            m('.ui.positive.button', { onclick: () => {
+                                                if(!(selectedTestParameterId && selectedMethodId))  return;
+
+                                                let { id: testParameterId, name: testParameterName, code } = selectedTestParameter;
+                                                let { id: methodId, name: methodName, unit } = selectedMethod;
+
+                                                //check methodId also
+                                                // let exists = currentState.sampleTestParameters.find( test => (test.id == testParameterId && test.methodId == methodId) ) != undefined;
+
+                                                //without methodId checking. only one testParameter method per sample
+                                                let exists = currentState.sampleTestParameters.find( test => (test.testParameterId == testParameterId) ) != undefined;
+
+                                                if(!exists) {
+                                                    // let testParameter = new TestParameterViewModel({
+                                                    //     id: testParameterId, 
+                                                    //     name: testParameterName,
+                                                    //     code: code,
+                                                    //     methodId: methodId,
+                                                    //     methodName: methodName,
+                                                    //     methodUnit: unit,
+                                                    // });
+                                                    DataManagers.TestParameters.GetTestParameterMethod(testParameterId, methodId).then( testParameterMethod => { addSampleTestParameter( testParameterMethod ); m.redraw(); } )
+                                                    //addSampleTestParameter( testParameter );
+                                                }
+                                                // let exists = !(currentState.sampleTestParameters.find( testParameter => (testParameter.id == currentState.selectedTestParameter.testParameterId && testParameter.methodId == currentState.selectedTestParameter.methodId) ) == undefined);
+                                                // if(!exists) {
+                                                //     let newTest = new TestParameterMethodModel({
+                                                //         id = 
+                                                //     });
+                                                // }
+
+                                                selectTestParameter(null);
+                                                selectTestParameterMethod(null);
+
+                                                //clearing testParameters and methods is enough to clear the dropdowns
+                                                // ctx.testParameterMethodDropDown.clear();
+                                                // ctx.testParameterDropDown.clear();
+                                            } }, 'Add')
+                                        ])
+                                    ])
+                                ])
+                            ])
+                        ])
+                    )
+                ])
+            ]);
+        }
+    };
+
+    class PurchaseOrderRequestAddPageModule
+    {
+        oninit() {
+            const defState = {
+                code: '',
+                customerId: 0,
+                contactId: 0,
+                receivedDate: new Date(),
+                samples: [],
+                quotation: null,
+
+                customers: [],
+                contacts: [],
+                matrices: []
+            };
+
+            let { fromDateFormat } = SPA.Common;
+
+            const actions = {
+                SET_CODE: code => ({code: code.toUpperCase()}),
+                SET_CUSTOMER_ID: customerId => ({customerId}),
+                SET_CONTACT_ID: contactId => ({contactId}),
+                SET_CONTACT: (contact) => ({contact}),
+                SET_RECEIVED_DATE: receivedDate => ( {receivedDate: fromDateFormat(receivedDate)} ),
+                ADD_SAMPLE: (sample, state) => { state.samples.push(sample); return { samples: state.samples }; },
+                SET_SAMPLING_FEES: (fees, { quotation }) => {
+                    // let newQuotation = new QuotationModel(quotation);
+                    if(!quotation) return { quotation: new QuotationModel({samplingFees: fees}) };
+                    return { quotation: Object.assign(quotation, { samplingFees: fees }) };
+                },
+                SET_EXTRA_FEES: (fees, reason, { quotation }) => {
+                    // let newQuotation = new QuotationModel(quotation);
+                    console.log(fees, reason, new QuotationModel({extraFees: fees, extraFeesReason: reason}));
+                    if(!quotation) return { quotation: new QuotationModel({extraFees: fees, extraFeesReason: reason}) };
+                    return { quotation: Object.assign(quotation, { extraFees: fees, extraFeesReason: reason }) };
+                },
+                SET_DISCOUNT: (discount, { quotation }) => {
+                    // let newQuotation = new QuotationModel(quotation);
+                    if(!quotation) return { quotation: new QuotationModel({discount}) };
+                    return { quotation: Object.assign(quotation, { discount }) };
+                },
+                SET_CUSTOMERS: customers => ({ customers: [...customers] }),
+                SET_CONTACTS: contacts => ({ contacts: [...contacts] }),
+                SET_MATRICES: matrices => ({ matrices: [...matrices] })
+            }
+
+            assignStore(this, defState, actions);
+            //this.loggerUnsubscribe = ((ctx) => { return ctx.store.subscribe(() => { console.log(ctx.store.getState()); }) })(this);
+
+            let { setCustomers, setContacts, setMatrices } = this;
+            Promise.all([DataManagers.Customers.GetAll(), DataManagers.Customers.GetAllContacts(), DataManagers.TestParameters.GetAllMatrices()]).then( ([customers, contacts, matrices]) => {
+                if(customers) setCustomers(customers);
+                if(contacts) setContacts(contacts);
+                if(matrices) setMatrices(matrices);
+                m.redraw();
+            } );
+        }
+
+
+        onremove() {
+            delete this.store;
+            delete this.sampleWindowHandle;
+            delete this.sampleContext;
+        }
+
+        view() {
+            const ctx = this;
+            const store = ctx.store;
+            const state = store.getState();
+
+            const { setCode, setContact, setReceivedDate, addSample, setCustomerId, setContactId, setSamplingFees, setExtraFees, setDiscount } = ctx;
+            const { toMoneyFormat, toDateFormat } = SPA.Common;
+            let { code, customerId, contactId, receivedDate, samples, quotation, customers, contacts, matrices } = state;
+            let { samplingFees=0, extraFees=0, extraFeesReason, discount=0 } = quotation || {};
+
+            let { setInteger, setFloat } = SPA.Common;
+
+            // let appState = SPA.store.getState();
+            // let { contacts, customers } = appState;
+            // let customers = await DataManagers.Customers.GetAll();
+            // let contacts = await DataManagers.Customers.GetAllContacts();
+            
+            let customerContacts = [];
+
+            if(customerId) {
+                // let customer = customers.find( customer => (customer.id == customerId) );
+                // customer.loadContacts();
+                customerContacts = contacts.filter( contact => (contact.customerId == customerId) );
+            }
+
+            //quotation calculations
+            let prices = samples.map( sample => (sample.testParameters.map( testParameter => (testParameter.testParameterMethodPrice) )) );
+            let testsFees = _.sum(_.flatten(prices)) || 0;
+            let subTotal = testsFees + samplingFees + extraFees;
+            let amounToDeduct = ((subTotal * discount) / 100);
+            let total = subTotal - amounToDeduct;
+            total = Math.round(total * 100) / 100;
+            let subTotalDescription = ['SubTotal =', toMoneyFormat(samplingFees), '+', toMoneyFormat(extraFees)].join(' ');
+            let totalDescription = ['Total =', toMoneyFormat(subTotal), '-', toMoneyFormat(amounToDeduct)].join(' ');
+
+
+            return m('.ui.stackable.grid', [
+                m('.two.column.row', [
+                    m('.column', [
+                        m('.ui.dividing.header', m('h2', 'Purchase Order Details')),
+
+                        m('.ui.form', [
+                            m('.two.fields', [
+                                FieldComponent({
+                                    name: 'code',
+                                    title: 'Code',
+                                    value: code,
+                                    onchange: setCode
+                                }),
+                                FieldComponent({
+                                    name: 'receivedDate',
+                                    title: 'Received Date',
+                                    value: toDateFormat(receivedDate),
+                                    type: 'date',
+                                    onchange: setReceivedDate
+                                })
+                            ]),
+                            m('.field', [
+                                m('label[for=customerDropDown]', 'Customer'),
+                                m(DropDownComponent, {
+                                    name: 'customerDropDown',
+                                    id: 'customerDropDown',
+                                    text: 'Select Customer ...',
+                                    onchange: (val) => { 
+                                        setCustomerId(val);
+                                        setContactId(null);
+                                     },
+                                    items: customers,
+                                    value: customerId,
+                                    render: (customer) => {
+                                        return [
+                                            m('span.text', customer.name),
+                                            m('span.description', customer.phoneNumber)
+                                        ];
+                                    }
+                                })
+                            ]),
+                            m('.field', [
+                                m('label[for=contactDropDown]', 'Contact'),
+                                m(DropDownComponent, {
+                                    name: 'contactDropDown',
+                                    id: 'contactDropDown',
+                                    text: 'Select Contact ...',
+                                    onchange: setContactId,
+                                    value: contactId,
+                                    items: customerContacts,
+                                    render: (contact) => {
+                                        return [
+                                            m('span.text', contact.name),
+                                            m('span.description', contact.phoneNumber)
+                                        ];
+                                    }
+                                })
+                            ])
+                        ])
+                    ]),
+
+                    m('.column', [
+                        m('.ui.dividing.header', m('h2', 'Quotation')),
+                       m('.ui.grid', [
+                           m('.two.column.row', [
+
+                               //Quotation
+                               m('.column', [
+                                    m('.ui.form', [
+                                        m('.field', [
+                                            m('label[for=samplingFees]', 'Sampling Fees'),
+                                            m('.ui.right.labeled.input', [
+                                                m('input[type=text]', {
+                                                    name: 'samplingFees',
+                                                    id: 'samplingFees',
+                                                    value: toMoneyFormat(samplingFees),
+                                                    onchange: m.withAttr('value', setFloat.bind(ctx, setSamplingFees))
+                                                }),
+                                                m('label.ui.label', 'KD')
+                                            ])
+                                        ]),
+                                        m('.field', [
+                                            m('label[for=extraFees]', 'Extra Fees'),
+                                            m('.ui.right.labeled.input', [
+                                                m('input[type=text]', {
+                                                    name: 'extraFees',
+                                                    id: 'extraFees',
+                                                    value: toMoneyFormat(extraFees),
+                                                    // onchange: m.withAttr('value', (val) => { setExtraFees(val, extraFeesReason); }),
+                                                    onchange: m.withAttr('value', val => { setFloat( value => setExtraFees(value, extraFeesReason) , val); })
+                                                }),
+                                                m('label.ui.label', 'KD')
+                                            ])
+                                        ]),
+                                        m('.field', [
+                                            m('textarea', { name: 'extraFeesReasson', id: 'extraFeesReasson', placeholder: 'Reason', rows: 3, disabled: extraFees? false : true, onchange: m.withAttr('value', (val) => { setExtraFees(extraFees, val); }) })
+                                        ]),
+                                        m('.field', [
+                                            m('label[for=discount]', 'Discount'),
+                                            m('.ui.right.labeled.input', [
+                                                m('input[type=text]', {
+                                                    name: 'discount',
+                                                    id: 'discount',
+                                                    value: numeral(discount).format('0'),
+                                                    onchange: m.withAttr('value', setInteger.bind(ctx, setDiscount))
+                                                }),
+                                                m('label.ui.label', '%')
+                                            ])
+                                        ])
+                                    ])
+                               ]),
+
+                               //Quotation Summary
+                               m('.column', [
+                                    m('table.ui.table', [
+                                        m('tbody', [
+                                            m('tr', [
+                                                m('td', 'Tests Fees'),
+                                                m('td', ':'),
+                                                m('td', toMoneyFormat(testsFees))
+                                            ]),
+                                            m('tr', [
+                                                m('td', 'Sampling Fees'),
+                                                m('td', ':'),
+                                                m('td', toMoneyFormat(samplingFees))
+                                            ]),
+                                            m('tr', [
+                                                m('td', 'Extra Fees'),
+                                                m('td', ':'),
+                                                m('td', toMoneyFormat(extraFees))
+                                            ]),
+                                            m('tr', [
+                                                m('td', 'Discount'),
+                                                m('td', ':'),
+                                                m('td', numeral(discount).format('0') + ' %')
+                                            ]),
+                                            m('tr.positive', [
+                                                m('td', 'SubTotal'),
+                                                m('td', ':'),
+                                                m('td', toMoneyFormat(subTotal))
+                                            ]),
+                                            m('tr.positive', [
+                                                m('td', 'Total'),
+                                                m('td', ':'),
+                                                m('td', toMoneyFormat(total))
+                                            ]),
+                                            // m('tr', [
+                                            //     m('td[colspan=3]', subTotalDescription )
+                                            // ])
+                                        ])
+                                    ])
+                               ])
+                           ])
+                       ])
+                    ])
+                ]),
+
+                m('.one.column.row', [
+                    m('.column', [
+                        m('.ui.dividing.header', m('h2', 'Samples')),
+
+                        m('.ui.top.attached.menu', [
+                            m('.right.menu', [
+                                m('button.ui.icon.button.item', { onclick: () => { ctx.sampleWindowHandle.show(); } }, m('i.plus.icon'))
+                            ])
+                        ]),
+                        m('table.ui.bottom.attached.celled.compact.table', [
+                            m('thead', [
+                                m('tr', [
+                                    m('th', 'Code'),
+                                    m('th', 'Matrix'),
+                                    m('th', 'Location'),
+                                    m('th', 'Received Date'),
+                                    m('th', 'Actions')
+                                ])
+                            ]),
+                            m('tbody', samples.map( (sample, index) => { 
+                                return m('tr', [
+                                    m('td', sample.code),
+                                    m('td', sample.matrixName),
+                                    m('td', sample.location),
+                                    m('td', moment(sample.receivedDate).format('YYYY-MM-DD')),
+                                    m('td.collapsing', [
+                                        m('button.ui.small.icon.basic.button[data-tooltip=edit][data-inverted]', { onclick: () => {
+                                            //edit
+                                        }}, m('i.edit.icon')),
+                                        m('button.ui.small.icon.basic.button[data-tooltip=delete][data-inverted]', { onclick: () => {
+                                            samples.splice(index, 1);
+                                        } }, m('i.times.icon'))
+                                    ])
+                                ]);
+                            }))
+                        ])
+                    ])
+                ]),
+
+                m('.one.column.row', m('.column', [
+                    m(WindowComponent, {
+                        title: 'Add New Sample',
+                        name: 'sampleAddWindow',
+                        id: 'sampleAddWindow',
+                        visible: false,
+                        oncreate: ({state, dom}) => { ctx.sampleWindowHandle = state.createHandle(dom); },
+                        onApprove: whnd => {
+                            let { matrixId, code, location, receivedDate, samplingTemprature, samplingPoint, samplingBy, samplingDate, sampleTestParameters, remarks } = ctx.sampleContext.store.getState();
+                            let { matrices } = ctx.store.getState();
+                            let matrixName = ( matrices.find( (matrix) => (matrix.id == matrixId) ) || { name: 'N/A' } ).name;
+                            ctx.addSample(new SampleViewModel( { code, location, matrixId, matrixName, receivedDate,
+                                                                samplingTemprature, samplingBy, samplingDate, samplingPoint, remarks, 
+                                                                locked: false, testParameters: sampleTestParameters, id: 0 } ));
+                            ctx.sampleContext.clear();
+                            whnd.hide(); /* or ctx.sampleWindowHandle.hide() */
+                        },
+                        onDeny: whnd => {  ctx.sampleContext.clearAll(); whnd.hide(); }
+                    }, [
+                        //Get SampleModule context(state)
+                        //state contains all required state actions
+                        m(SampleAddModule, { oncreate: ({state}) => { ctx.sampleContext = state } })
+                    ])
+                ])),
+
+                m('one.column.row', [
+                    m('.column', [
+                        m('.ui.positive.large.button.right.floated', { onclick: () => {
+                                let { code, customerId, contactId, receivedDate, samples, quotation } = state;
+
+                                //Convert from SampleViewModels to SampleModels to prepare for submission.
+                                //Convert from TestParameterViewModel to SampleTestParameterModel
+                                //Models for server POSTing\DELETEing\PUTing. and ViewModels for server GETting.
+                                let sampleModels = samples.map( sample => {
+                                    let { code, location, receivedDate, matrixId, samplingPoint, samplingDate, samplingBy, samplingTemprature, remarks, testParameters } = sample;
+
+                                    let sampleTestParameters = testParameters.map( testParameter => {
+                                        return new SampleTestParameterModel({ sampleId: 0, testParameterId: testParameter.testParameterId, methodId: testParameter.methodId, modifiedPrice: testParameter.testParameterMethodPrice });
+                                    } );
+
+                                    return new SampleModel({
+                                        code, location, receivedDate, matrixId, samplingPoint, samplingDate, samplingBy, samplingTemprature, remarks, sampleTestParameters
+                                    })
+                                } );
+
+                                if(quotation && ( !quotation.extraFees && !quotation.samplingFees && !quotation.discount )) quotation = null;
+
+                                let por = new PurchaseOrderRequestModel({
+                                    code, customerId, contactId, receivedDate, samples: sampleModels, quotation
+                                });
+
+                                DataManagers.PurchaseOrder.Save(por).then( porId => { console.log(porId); m.route.set('/por'); } ).catch( error => console.log(error) );
+                            }
+                        }, 'Submit Purchase Order')
+                    ])
+                ])
+                
+            ]);
+        }
+    }
+
+    addEventListener('DOMContentLoaded', (e) => {
+
+        const main = document.getElementById("main");
+        m.route(main, '/por', {
+            '/por': PurchaseOrderRequestPageModule,
+            '/por/add': PurchaseOrderRequestAddPageModule,
+            '/samples': SamplesViewModule,
+            '/sample/:id': SampleModule,
+            '/tests': TestsPageModule
+        });
+    } );
+
+</script>
+
+
+<!-- <div class="ui four column double stackable grid">
+    <div class="row">
+        <div class="column">
+            <p>1</p>
+        </div>
+        <div class="column">
+            <p>2</p>
+        </div>
+        <div class="column">
+            <p>3</p>
+        </div>
+        <div class="column">
+            <p>4</p>
+        </div>    
+    </div>
+</div> -->

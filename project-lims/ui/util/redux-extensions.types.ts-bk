@@ -1,0 +1,23 @@
+
+import { createStore as createStoreOrig } from "redux";
+import { createActions as createActionsOrig, createReducer as createReducerOrig } from './redux-extension'
+
+
+interface IActionGenerators<T>
+{
+    [prop:string] : (...args: any[]) => (T);
+}
+interface IAction
+{
+    type: string;
+    [prop: string]: any;
+}
+
+export const createReducer = <T>(defState: T, reducer?: (newState: T, action: IAction) => T ) => { return createReducerOrig(defState, reducer); }
+export const createActions = <T>(callbacks: IActionGenerators<T>) => { return createActionsOrig(callbacks); }
+export const createStore = createStoreOrig;
+
+
+
+// export declare const createReducer: <T>(defState: T, reducer?: (newState: T, action: IAction) => T ) => Function;
+// export declare const createActions: <T>(callbacks: IActionGenerators<T>) => IAction

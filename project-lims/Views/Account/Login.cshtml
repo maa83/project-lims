@@ -1,0 +1,55 @@
+
+
+
+<form action="/account/login" method="POST">
+
+    <div class="ui centered two column grid">
+        <div class="column">
+            <div class="ui padding clearing segment">
+                <div class="ui header">
+                    Login
+                    <i class="key small icon"></i>
+                </div>
+            
+            
+                <div class="ui form">
+                    <div class="field">
+                        <label for="userName">UserName</label>
+                        <input type="text" name="userName" />
+                    </div>
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <input type="password" name="password" />
+                    </div>
+                    <div class="field">
+                        <div class="ui checkbox">
+                            <input type="checkbox" name="rememberMe" />
+                            <input type="hidden" name="rememberMe" value="false">
+                            <label for="rememberMe">Remember Me</label>
+                        </div>
+                    </div>
+
+                    <div class="ui basic segment">
+                        @{
+                            var errorMessage = "";
+
+                            if(ViewData["Failed"] != null){
+                                errorMessage = ViewData["Failed"].ToString();
+                        }
+                        }
+                        <span>
+                            @errorMessage
+                        </span>
+                    </div>
+    
+                    <button class="ui right floated primary button">
+                        <i class="key icon"></i>
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+</form>

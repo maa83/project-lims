@@ -1,0 +1,7 @@
+*/.git/*
+*/.hg/*
+syntax: glob
+
+*/node_modules/*
+*/bin/*
+*/obj/*

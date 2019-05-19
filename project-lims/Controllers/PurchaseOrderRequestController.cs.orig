@@ -1,0 +1,160 @@
+
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.DependencyInjection;
+
+using Lims.Models;
+using Lims.Managers;
+
+namespace Lims
+{
+    public class CustomModelBinder : IModelBinder
+    {
+        public Task BindModelAsync(ModelBindingContext bindingContext)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    [CustomExceptionFilter]
+    public class PurchaseOrderRequestsController : Controller
+    {
+        private ILogger logger;
+        private SamplesManager samples;
+        public PurchaseOrderRequestsController(ILoggerFactory logFactory, SamplesManager samples)
+        {
+            this.samples = samples;
+            this.logger = logFactory.CreateLogger("POR Logger");
+        }
+
+        /* Purchase Order Action Methods */
+        /* GET RETURN ViewModels */
+        [HttpGet("[controller]/")]
+        public async Task<IActionResult> GetAll()
+        {
+            logger.LogWarning("GET: All Purchase Orders");
+            return Json(await samples.GetPurchaseOrderRequests());
+        }
+
+        [HttpGet("[controller]/{id:int}")]
+        public async Task<IActionResult> Get(int id)
+        {
+            logger.LogWarning($"GET: Purchase Order Id: {id}");
+            return Json(await samples.GetPurchaseOrderRequest(id));
+        }
+
+        /* POST/PUT Accept TransferModels RETURN ID */
+        [HttpPost("[controller]/")]
+        public async Task<IActionResult> Post([FromBody]PurchaseOrderRequestModel purchaseOrder )
+        {
+            logger.LogWarning($"POST Purchase Order Code: {purchaseOrder.Code} , ContactId: {purchaseOrder.ContactId} , ReceivedDate: {purchaseOrder.ReceivedDate.ToShortDateString()}");
+            logger.LogWarning($"Samples: {purchaseOrder.Samples == null}");
+            return Json(await samples.SavePurchaseOrderRequest(purchaseOrder));
+        }
+        [HttpPut("[controller]/")]
+        public IActionResult Put([FromBody]PurchaseOrderRequestModel purchaseOrder)
+        {
+            logger.LogWarning($"PUT: Purchase Order Id: {purchaseOrder.Id}");
+            return Json("");
+        }
+
+        /* DELETE Accept ID RETURN BOOL */
+        [HttpDelete("[controller]/{id:int}")]
+        public IActionResult Delete(int purchaseOrderId)
+        {
+            logger.LogWarning($"DELETE: Purchase Order Id: {purchaseOrderId}");
+            return Json("");
+        }
+
+
+
+        /* Quotation */
+        [HttpGet("[controller]/{id:int}/Quotation")]
+        public async Task<IActionResult> GetPurchaseOrderRequestQuotation(int id)
+        {
+            logger.LogWarning( "GET: Purchase Order Quotation" );
+            return Json(await samples.GetPurchaseOrderRequestQuotation(id));
+        }
+
+        /* Samples */
+        [HttpGet("[controller]/{id:int}/Samples")]
+        public async Task<IActionResult> GetPurchaseOrderRequestSamples(int id)
+        {
+            logger.LogWarning( "GET: Purchase Order Samples" );
+            return Json(await samples.GetByPurchaseOrderRequestId(id));
+        }
+    }
+
+
+
+    public class CustomExceptionFilter : ExceptionFilterAttribute
+    {
+        // private ILogger logger;
+        public CustomExceptionFilter()
+        {
+            // this.logger = provider.GetService<ILoggerFactory>().CreateLogger("Exception Logger");
+        }
+
+        public override void OnException(ExceptionContext context)
+        {
+            string exceptionType = context.Exception.GetType().Name, exceptionMessage = context.Exception.Message;
+            // logger.LogError($"Type: {exceptionType}: , Message: {exceptionMessage}");
+            context.Result = new JsonResult($"Exception: {exceptionMessage}") { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+
+        public override Task OnExceptionAsync(ExceptionContext context)
+        {
+            string exceptionType = context.Exception.GetType().Name, exceptionMessage = context.Exception.Message;
+            context.Result = new JsonResult($"Exception: {exceptionMessage}") { StatusCode = StatusCodes.Status500InternalServerError };
+            return Task.CompletedTask;
+        }
+        
+    }
+
+
+
+    public class PurchaseOrderRequestTransferModel
+
+        {
+            public string Code { get; set; }
+            public int ContactId { get; set; }
+            public DateTime ReceivedDate { get; set; }
+
+            public QuotationTransferModel Quotation { get; set; }
+            public List<SampleTransferModel> Samples { get; set; }
+        }
+
+        public class SampleTransferModel
+        {
+            public string Code { get; set; }
+            public DateTime ReceivedDate { get; set; }
+
+            public string Location { get; set; }
+            public int MatrixId { get; set; }
+
+            public List<SampleTestParameterTransferModel> SampleTestParameters { get; set; }
+        }
+
+        public class SampleTestParameterTransferModel
+        {
+            public int SampleId { get; set; }
+            public int TestParameterId { get; set; }
+            public int MethodId { get; set; }
+        }
+
+        public class QuotationTransferModel
+        {
+            public double SamplingFees { get; set; }
+            public double ExtraFees { get; set; }
+            public string ExtraFeesReason { get; set; }
+            public int Discount { get; set; }
+        }
+}

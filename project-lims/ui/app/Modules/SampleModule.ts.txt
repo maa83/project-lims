@@ -1,0 +1,96 @@
+
+import * as m from "mithril";
+import { ClassComponent, CVnode } from "mithril";
+import { DatePickerComponent, IDatePickerAttr, DateRangeComponent, TableModule, ButtonModule } from "../Shared/Components";
+import { createStore, createActions, createReducer } from "../../util/redux-extensions.types";
+import * as moment from 'moment'
+
+class SampleModel
+{
+    public id: number;
+    public name: string;
+    public description: string;
+}
+
+interface ISampleFilter
+{
+    name?: string;
+    matrices?: string[];
+}
+
+export interface SamplesModuleAttrs
+{
+    name: string;
+}
+
+export class SampleModule implements ClassComponent<SamplesModuleAttrs>
+{
+    private setName: (name: string) => void;
+    private appendName: (name: string) => void;
+    private setMatrices: (matrices: string[]) => void;
+    private addMatrix: (name: string) => void;
+    private reset: () => void;
+    
+
+    private filterStore
+
+    constructor() {
+        this.filterStore = createStore(createReducer<ISampleFilter>({ name: 'Mohammad', matrices: [] }));
+        const { setName, appendName, setMatrices, addMatrix, reset } = createActions<ISampleFilter>({
+            SET_NAME: (name: string) => ({ name }),
+            APPEND_NAME: (name: string, state: ISampleFilter) => ({ name: [state.name, name].join(' ') }),
+            SET_MATRICES: (matrices: string[]) => ({ matrices }),
+            ADD_MATRIX: (matrix: string, state: ISampleFilter) => { 
+                let matrices = state.matrices;
+                matrices.push(matrix);
+                return { matrices };
+             },
+            RESET: () => ({ name: 'Mohammad Abdullah', matrices: [] })
+        });
+        const self = this;
+        this.setName = (name) => { self.filterStore.dispatch(setName(name)); };
+        this.appendName = (name) => { self.filterStore.dispatch(appendName(name)); };
+        this.setMatrices = (matrices: string[]) => { self.filterStore.dispatch(setMatrices(matrices)); };
+        this.addMatrix = (matrix: string) => { self.filterStore.dispatch(addMatrix(matrix)); };
+        this.reset = () => { self.filterStore.dispatch(reset()); }
+    }
+
+    oninit()
+    {
+        this.setName('Hiba');
+        this.appendName('Abdulqader')
+        this.addMatrix('Solid');
+    }
+
+    oncreate()
+    {
+    }
+
+    onupdate()
+    {
+    }
+
+    view({ attrs } : CVnode<SamplesModuleAttrs>) {
+
+        let filterState: ISampleFilter = this.filterStore.getState();
+        let model = this;
+
+        return m('div', [
+            m('h1', `Title: ${ attrs.name }`),
+            m('h1', `Hello ${ filterState.name }`),
+            m('button', { onclick: this.setName.bind(this, 'Hiba Abdulqader') }, 'Greet Hiba'),
+            m('table', [
+                m('thead', m('tr', [
+                    m('td', 'Matrix Name')
+                ])),
+                m('tbody', filterState.matrices.map((matrix) => ( m('tr', [ m('td', matrix) ]) ) )),
+                //m('tfoot')
+            ]),
+            m('button', { onclick: this.addMatrix.bind(this, 'Another Matrix') }, 'Add Matrix'),
+            m('button', { onclick: this.reset }, 'Reset'),
+            m(DatePickerComponent, { placeholder: 'pick a date' } as IDatePickerAttr),
+            m(DateRangeComponent),
+            m(DateRangeComponent)
+        ]);
+    }
+}

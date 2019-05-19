@@ -1,0 +1,441 @@
+
+<div class="ui top attached menu">
+    <!-- <a href="" class="right floated item">
+        <i class="cog icon"></i>
+        Item
+    </a> -->
+
+    <div class="ui dropdown icon item">
+        <i class="wrench icon"></i>
+        <!-- <div class="text">Settings</div> -->
+        <div class="menu">
+            <div class="item">
+                SomeItem
+            </div>
+        </div>
+    </div>
+</div>
+<div class="ui bottom attached segment" id="samplesSegment">
+
+    <div class="ui double stackable grid">
+
+        <div class="two column centered row">
+            <div class="column" style="text-align: center">
+                <h3 class="ui icon header">
+                    <i class="boxes icon"></i>
+                    <div class="content">
+                        Samples
+                        <div class="sub header">Manage Samples</div>
+                    </div>
+                </h3>
+            </div>
+        </div>
+        
+        <div class="one column row">
+            <div class="column">
+    
+                <table class="ui compact celled definition table">
+                    <thead class="full-width">
+                        <tr>
+                            <th></th>
+                            <th>Customer</th>
+                            <th>Matrix</th>
+                            <th>Test Parameters</th>
+                            <th>Code</th>
+                            <th>Actions</th>
+                        </tr>
+                        <tr>
+
+                            <th colspan="4"></th>
+                            <th colspan="2" >
+                                <div class="ui form">
+                                    <div class="inline fields">
+                                        <div class="field">
+                                            <input type="text" placeholder="Search" />
+                                        </div>
+                                        <button class="ui right floated icon button">
+                                            <i class="search icon"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </th>
+                                
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <td class="collapsing">
+                            <div class="ui fitted slider checkbox">
+                                <input type="checkbox"> <label></label>
+                            </div>
+                        </td>
+                        <td>
+                            Some Customer
+                        </td>
+                        <td>
+                            Matrix
+                        </td>
+                        <td>
+                            Some Test Parameters
+                        </td>
+                        <td>
+                            TK-SP
+                        </td>
+                        <td class="collapsing">
+                            <button class="ui icon basic small button" id="sampleDeleteButton" data-tooltip="delete sample" data-inverted="">
+                                <i class="times icon"></i> 
+                            </button>
+                            <button class="ui icon basic small button" id="sampleEditButton" data-tooltip="edit sample" data-inverted="">
+                                <i class="edit icon"></i>
+                            </button>
+                        </td>
+                    </tbody>
+                    <tfoot class="full-width">
+                        <th></th>
+                        <th colspan="8">
+                            <button class="ui small negative button">Delete</button>
+                            <button class="ui small negative button">Delete All</button>
+                            <button id="sampleAddButton" name="sampleAddButton" class="ui right floated small primary button">
+                                <i class="plus icon"></i> Add New
+                            </button>
+                        </th>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="ui small modal" id="sampleAddModal">
+    <div class="header">
+        <h2>Add New Sample</h2>
+    </div>
+
+    <!-- <div class="description">
+        <h4>Test Details</h4>
+    </div> -->
+
+    <div class="content">
+        <div class="ui form">
+
+
+            <div class="ui dividing header">Initial Details</div>
+            <div class="three fields">
+                <div class="field">
+                    <label for="">Code</label>
+                    <input type="text" />
+                </div>
+                <div class="field">
+                    <label for="">Location</label>
+                    <input type="text" />
+                </div>
+                <div class="field">
+                    <label for="">Received Date</label>
+                    <input type="date" />
+                </div>
+            </div>
+
+            <div class="ui dividing header">Sampling Details</div>
+            <div class="fields">
+                <div class="field">
+                    <label for="">Sampling Point</label>
+                    <input type="text" />
+                </div>
+                <div class="field">
+                    <label for="">Sampling By</label>
+                    <input type="text" />
+                </div>
+                <div class="field">
+                    <label for="">Sampling Date</label>
+                    <input type="date" value="2018-09-01" min="2018-01-01" max="" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="">Remarks</label>
+                <textarea name="" id="" cols="30" rows="10"></textarea>
+            </div>
+
+            <div class="ui dividing header">Test Details</div>
+
+            <div class="two fields">
+                <div class="field">
+                    <label for="">Matrix</label>
+                    <select name="" id="" class="ui search selection dropdown">
+                        <option value="">Matrix</option>
+                        <option value="1">Matrix 1</option>
+                        <option value="2">Matrix 2</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="">Test Parameters</label>
+                    <select name="" id="" class="ui search selection dropdown" multiple="">
+                        <option value="">Test Parameter</option>
+                        <option value="1">Test Parameter 1</option>
+                        <option value="2">Test Parameter 2</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="ui dividing header">Comm. Details</div>
+
+            <div class="two fields">
+                <div class="field">
+                    <label for="">Contact</label>
+                    <!-- <div>
+                        <div class="ui search selection dropdown">
+                            <div class="default text">Contact</div>
+                            <input name="gender" type="hidden">
+                            <i class="dropdown icon"></i>
+                            <div class="menu">
+                                <div class="item" data-value="1">Mohammad</div>
+                                <div class="item" data-value="2">Yousef</div>
+                            </div>
+                        </div>
+                        <button class="ui small button">...</button>
+                    </div> -->
+
+                    <div class="ui search selection dropdown">
+                        <div class="default text">Contact</div>
+                        <input name="gender" type="hidden">
+                        <i class="dropdown icon"></i>
+                        <div class="menu">
+                            <div class="item" data-value="1">Mohammad</div>
+                            <div class="item" data-value="2">Yousef</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="">Received By</label>
+                    <select name="" id="" class="ui search dropdown">
+                        <option value="">User</option>
+                        <option value="1">Mohammad</option>
+                        <option value="2">Yoused</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <button class="ui basic negative button">
+            <i class="times icon"></i> Cancel
+        </button>
+        <button class="ui basic positive button">
+            <i class="check icon"></i> Add
+        </button>
+    </div>
+</div>
+
+
+<div id="main">
+
+</div>
+
+
+<script>
+
+    const LabelComponent = (text, forAttrib = '') => {
+        let attribs = {};
+        if(forAttrib)
+            //attribs['for'] = forAttrib;
+            Object.assign(attribs, { for: forAttrib });
+        return m('label', attribs, text);
+    }
+
+    const FieldComponent = ({ type='text', title='', name='', value='', onchange= null }) => {
+        type = ['text', 'date'].find((item) => { return item == type; }) ? type : 'text';
+        onchange = onchange ? m.withAttr('value', onchange) : () => { console.log('Not Implemented'); };
+        title = title ? _.startCase(title) : _.startCase(name);
+        return m('.field', [
+            m('label', { for: name }, title),
+            m('input', { type, name, value, onchange })
+        ]);
+    };
+
+    const SPA = {
+        Common: {
+            dateFormat: 'YYYY-MM-DD'
+        }
+    };
+
+    var defaultHomeModuleState = {
+        code: '',
+        location: '',
+        receivedDate: moment().format(SPA.Common.dateFormat),
+
+        samplingPoint: '',
+        samplingDate: moment().add(-3, 'day').format(SPA.Common.dateFormat),
+        samplingBy: '',
+        samplingTemprature: 20.5
+    };
+
+    var { setCode, setLocation, setReceivedDate, setSamplingPoint, setSamplingDate, setSamplingBy, setSamplingTemprature } = createActions({
+        SET_CODE: code => ( { code } ),
+        SET_LOCATION: location => { return { location: location }; },
+        SET_RECEIVED_DATE: date => ({ receivedDate: date }),
+        SET_SAMPLING_POINT: point => ( { samplingPoint: point } ),
+        SET_SAMPLING_DATE: date => ( { samplingDate: date } ),
+        SET_SAMPLING_BY: samplingBy => ( { samplingBy } ),
+        SET_SAMPLING_TEMPRATURE: temp => ( { samplingTemprature: temp } ),
+    });
+
+    let store = Redux.createStore(createReducer(defaultHomeModuleState));
+
+    let homeLoggerUnsubscribe = store.subscribe( () => { 
+        let currentState = store.getState();
+        console.log(currentState);
+    } );
+
+
+    class HomeModule
+    {
+        constructor(store) {
+            console.log('Home Module Constructor');
+            this.store = store;
+        }
+
+        oninit() {
+            console.log('Home Module Initialized');
+        }
+
+        oncreate() {
+            console.log('Home Module Created');
+        }
+
+        view() {
+            var store = this.store;
+            let currentState = store.getState();
+
+            let segmentMenu = m('.ui.top.attached.menu', [
+                m('.ui.dropdown.icon.item', [
+                    m('i.wrench.icon'),
+                    m('.menu', [
+                        m('.item', m('button.ui.button'))
+                    ])
+                ]),
+
+                m('.right.menu', [
+                    m('button.ui.small.button.item', { onclick: () => { console.log('clicked'); } }, [
+                        m('i.plus.icon'),
+                        'Add Test'
+                    ]),
+                    m('button.ui.button.item', { onclick: () => { console.log('clicked'); } }, [
+                        m('i.plus.icon'),
+                        'Add Test Matrix'
+                    ]),
+                    m('button.ui.button.item', { onclick: () => { console.log('clicked'); } }, [
+                        m('i.plus.icon'),
+                        'Add Test Method'
+                    ])
+                ])
+            ]);
+
+            var icon = 'boxes';
+            var iconEl = ['i.', icon, '.icon'].join('');
+
+            let segment = m('.ui.bottom.attached.segment', m('.ui.stackable.double.grid', [
+                m('.two.column.centered.row', m('.column', { style: { textAlign: 'center' } }, m('.ui.icon.header', [
+                    m(iconEl),
+                    m('.content', 'New Sample', m('.sub.header', 'Enter new sample details'))
+                ]))),
+
+                m('.row', [
+                    m('.column', 
+                        m('.ui.form', [
+                            m('.ui.dividing.header', 'Initial Details'),
+                            m('.three.fields', [
+                                m('.field', [
+                                    LabelComponent('Code', 'code'),
+                                    m('input[type=text][name=code]', { value: currentState.code, onchange: m.withAttr('value', (val) => { store.dispatch(setCode(val)); }) })
+                                ]),
+                                m('.field', [
+                                    LabelComponent('Location', 'location'),
+                                    m('input[type=text][name=location]', { value: currentState.location, onchange: m.withAttr('value', (val) => { store.dispatch(setLocation(val)); }) })
+                                ]),
+                                m('.field', [
+                                    LabelComponent('Received Date', 'receivedDate'),
+                                    m('input[type=date][name=receivedDate]', { value: currentState.receivedDate, onchange: m.withAttr('value', (val) => { store.dispatch(setReceivedDate(val)); }) })
+                                ])
+                            ]),
+
+                            m('.ui.dividing.header', 'Sampling Details'),
+
+                            m('.four.fields', [
+                            FieldComponent({
+                                    type: 'text',
+                                    name: 'samplingPoint',
+                                    value: currentState.samplingPoint,
+                                    onchange: (val) => { store.dispatch(setSamplingPoint(val)); }
+                                }),
+                                FieldComponent({
+                                    type: 'date',
+                                    name: 'samplingDate',
+                                    title: 'Sampling Date',
+                                    value: currentState.samplingDate,
+                                    onchange: (val) => { store.dispatch(setSamplingDate(val)); }
+                                }),
+                                FieldComponent({
+                                    type: 'text',
+                                    name: 'samplingBy',
+                                    value: currentState.samplingBy,
+                                    onchange: (val) => { store.dispatch(setSamplingBy(val)); }
+                                }),
+                                FieldComponent({
+                                    type: 'text',
+                                    name: 'samplingTemprature',
+                                    value: currentState.samplingTemprature,
+                                    onchange: (val) => { store.dispatch(setSamplingTemprature(val)); }
+                                })
+                            ]),
+                        ])
+                    )
+                ])
+            ]));
+
+            return [
+                segmentMenu, 
+                segment
+            ];
+        }
+    }
+
+    addEventListener('DOMContentLoaded', (e) => { 
+
+
+        var el = document.querySelector('button#sampleAddButton');
+        var mEl = document.querySelector('div.modal#sampleAddModal');
+        modal(el, mEl);
+        el = document.querySelector('button#sampleEditButton');
+        modal(el, mEl);
+
+        //Initialize DropDowns
+        //$('select.dropdown').dropdown();
+
+        console.log('DOM loaded');
+
+        const main = document.getElementById("main");
+        m.route(main, '/', {
+            '/': new HomeModule(store)
+        });
+    } );
+
+</script>
+
+
+<!-- <div class="ui four column double stackable grid">
+    <div class="row">
+        <div class="column">
+            <p>1</p>
+        </div>
+        <div class="column">
+            <p>2</p>
+        </div>
+        <div class="column">
+            <p>3</p>
+        </div>
+        <div class="column">
+            <p>4</p>
+        </div>    
+    </div>
+</div> -->

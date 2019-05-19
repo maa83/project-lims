@@ -1,0 +1,313 @@
+
+
+
+<div class="ui segment">
+
+    <div class="ui double stackable grid">
+
+        <div class="two column centered row">
+            <div class="column" style="text-align: center">
+                <h3 class="ui icon header">
+                    <i class="flask icon"></i>
+                    <div class="content">
+                        Tests
+                        <div class="sub header">Manage Sample Tests</div>
+                    </div>
+                </h3>
+            </div>
+        </div>
+        
+        <div class="one column row">
+            <div class="column">
+    
+                <table class="ui compact celled difinition table">
+                    <thead>
+                        <tr>
+                                <th></th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Unit of Measurement</th>
+                                <th>Code</th>
+                                <th>Actions</th>
+                        </tr>
+                        <tr>
+                                <th colspan="4"></th>
+                                <th colspan="2" >
+                                    <div class="ui form">
+                                        <div class="inline fields">
+                                            <div class="field">
+                                                <input type="text" placeholder="Search" />
+                                            </div>
+                                            <button class="ui right floated button">
+                                                <i class="search icon"></i> Search
+                                            </button>
+                                        </div>
+                                    </div>
+                                </th>
+                                
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <td class="collapsing">
+                            <div class="ui fitted slider checkbox">
+                                <input type="checkbox"> <label></label>
+                            </div>
+                        </td>
+                        <td>
+                            Some Test
+                        </td>
+                        <td>
+                            Some Test Description
+                        </td>
+                        <td>
+                            Km/S
+                        </td>
+                        <td>TK-SP</td>
+                        <td class="collapsing">
+                            <button class="ui icon basic negative button" id="testDeleteButton" data-tooltip="delete test" data-inverted="">
+                                <i class="times icon"></i> 
+                            </button>
+                            <button class="ui icon basic yellow button" id="testEditButton" data-tooltip="edit test" data-inverted="">
+                                <i class="edit icon"></i>
+                            </button>
+                        </td>
+                    </tbody>
+                    <tfoot>
+                        <th></th>
+                        <th colspan="5">
+                            <button class="ui small negative button">Delete</button>
+                            <button class="ui small negative button">Delete All</button>
+                            <button id="addNewTest" name="addNewTest" class="ui right floated small primary button">
+                                <i class="plus icon"></i> Add New
+                            </button>
+                        </th>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="ui segment">
+
+    <div class="ui double stackable grid">
+
+        <div class="two column centered row">
+            <div class="column" style="text-align: center">
+                <h3 class="ui icon header">
+                    <i class="flask icon"></i>
+                    <div class="content">
+                        Samples
+                        <div class="sub header">Manage Samples</div>
+                    </div>
+                </h3>
+            </div>
+        </div>
+        
+        <div class="one column row">
+            <div class="column">
+    
+                <table class="ui compact celled difinition table">
+                    <thead>
+                        <tr>
+                                <th></th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Unit of Measurement</th>
+                                <th>Code</th>
+                                <th>Actions</th>
+                        </tr>
+                        <tr>
+                                <th colspan="4"></th>
+                                <th colspan="2" >
+                                    <div class="ui form">
+                                        <div class="inline fields">
+                                            <div class="field">
+                                                <input type="text" placeholder="Search" />
+                                            </div>
+                                            <button class="ui right floated button">
+                                                <i class="search icon"></i> Search
+                                            </button>
+                                        </div>
+                                    </div>
+                                </th>
+                                
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <td class="collapsing">
+                            <div class="ui fitted slider checkbox">
+                                <input type="checkbox"> <label></label>
+                            </div>
+                        </td>
+                        <td>
+                            Some Test
+                        </td>
+                        <td>
+                            Some Test Description
+                        </td>
+                        <td>
+                            Km/S
+                        </td>
+                        <td>TK-SP</td>
+                        <td class="collapsing">
+                            <button class="ui icon basic negative button" id="testDeleteButton" data-tooltip="delete test" data-inverted="">
+                                <i class="times icon"></i> 
+                            </button>
+                            <button class="ui icon basic yellow button" id="testEditButton" data-tooltip="edit test" data-inverted="">
+                                <i class="edit icon"></i>
+                            </button>
+                        </td>
+                    </tbody>
+                    <tfoot>
+                        <th></th>
+                        <th colspan="5">
+                            <button class="ui small negative button">Delete</button>
+                            <button class="ui small negative button">Delete All</button>
+                            <button id="addNewTest" name="addNewTest" class="ui right floated small primary button">
+                                <i class="plus icon"></i> Add New
+                            </button>
+                        </th>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+<div class="ui small modal">
+    <div class="header">
+        <h2>Add New Test</h2>
+    </div>
+
+    <!-- <div class="description">
+        <h4>Test Details</h4>
+    </div> -->
+
+    <div class="content">
+        <div class="ui form">
+            <div class="ui dividing header">Test Details</div>
+            <div class="three fields">
+                <div class="field">
+                    <label for="">Name</label>
+                    <input type="text" />
+                </div>
+                <div class="field">
+                    <label for="">Unit</label>
+                    <input type="text" />
+                </div>
+                <div class="field">
+                    <label for="">Code</label>
+                    <input type="text" />
+                </div>
+            </div>
+            <div class="field">
+                <label for="">Description</label>
+                <textarea name="" id="" cols="30" rows="10"></textarea>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <label for="">Matrices</label>
+                    <select name="" id="" class="ui search selection dropdown" multiple="">
+                        <option value="1">Matrix 1</option>
+                        <option value="2">Matrix 2</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="">Methods</label>
+                    <select name="" id="" class="ui search selection dropdown" multiple="">
+                        <option value="1">Method 1</option>
+                        <option value="2">Method 2</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <button class="ui basic negative button">
+            <i class="thumbs down icon"></i> Cancel
+        </button>
+        <button class="ui basic positive button">
+            <i class="thumbs up icon"></i> Add
+        </button>
+    </div>
+</div>
+
+<script>
+
+    function modal(el){
+        var mEl = $('.modal');
+        el.addEventListener('click', ( { target } ) => {
+            console.log('clicked');
+            mEl.modal({
+                centered: false,
+                selector: {
+                    close: '.close',
+                    approve: '.ok, .positive',
+                    deny: '.cancel, .negative'
+                },
+                onShow: () => { console.log('modal show'); },
+                onVisible: () => {  },
+                onHide: (el) => { console.log('modal hide'); },
+                onHidden: () => {  },
+                onApprove: (el) => { console.log('modal approved'); },
+                onDeny: (el) => { console.log('modal denied'); }
+            }).modal('show');
+            
+            $('select.dropdown').dropdown({
+                allowAdditions: true,
+                onAdd: (val, text, choice) => {
+                    // console.log(val, text, choice);
+                },
+                onRemove: (val, text, choice) => {
+                    // console.log(val, text, choice);
+                },
+                onChange: (val, text, choice) => {
+                    console.log(val, text, choice);
+                }
+            });
+        });
+    }
+
+    addEventListener('DOMContentLoaded', (e) => { 
+
+        var el = document.querySelector('button#addNewTest');
+        modal(el);
+
+        el = document.querySelector('button#testEditButton');
+        modal(el);
+
+        //Initialize DropDowns
+        //$('select.dropdown').dropdown();
+
+        console.log('DOM loaded');
+    } );
+
+    // document.addEventListener('readystatechange', (e, s) => {
+    //     if(e.target.readyState == 'interactive')
+    //         console.log('ready');
+    // });
+</script>
+
+
+<!-- <div class="ui four column double stackable grid">
+    <div class="row">
+        <div class="column">
+            <p>1</p>
+        </div>
+        <div class="column">
+            <p>2</p>
+        </div>
+        <div class="column">
+            <p>3</p>
+        </div>
+        <div class="column">
+            <p>4</p>
+        </div>    
+    </div>
+</div> -->

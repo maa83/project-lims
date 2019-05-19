@@ -1,0 +1,104 @@
+import * as m from 'mithril';
+import { ClassComponent, Component, Vnode, CVnode } from 'mithril';
+
+export interface IDepCompAttr {
+    name: string;
+    id: number;
+}
+
+export interface IDepCompState {
+    data: [SomeModel];
+}
+
+export interface SomeModel {
+    name: string;
+    id: number;
+}
+
+
+
+
+export let AnotherDepComp1 =  {
+    data: [] = [{id: 1, name: 'Mohammad Abdullah'}],
+
+    oninit({ attrs: {id, name}, state: { data } }: Vnode<IDepCompAttr, IDepCompState>){
+        this.data.push({ id, name });
+        this.data.push({ id: 3, name: 'Yousef Abdullah' });
+        //state.data.push({ id: 3, name: 'yellow', test: '' }); //not allowed
+    },
+
+    oncreate({ state: { data } }: Vnode<IDepCompAttr, IDepCompState>){
+        this.data.push({ id: 4, name: 'Anas Abdullah' });
+    },
+
+    view({ attrs, state }: Vnode<IDepCompAttr, IDepCompState>) {
+        return this.data.map((item) => { return m('span', [ `Name: ${item.name} , ID: ${item.id}`, m.trust('<br>') ]); });
+    }
+} as m.Comp<IDepCompAttr, IDepCompState>;
+
+
+export let AnotherDepComp =  {
+    oninit(vnode: Vnode<IDepCompAttr, IDepCompState>){
+        vnode.state.data = [{id: 1, name: 'Mohammad Abdullah'}] as [SomeModel];
+        vnode.state.data.push({ id: vnode.attrs.id, name: vnode.attrs.name });
+        //state.data.push({ id: 3, name: 'yellow', test: '' }); //not allowed
+    },
+
+    oncreate({ state: { data } }: Vnode<IDepCompAttr, IDepCompState>){
+        data.push({ id: 3, name: 'Yousef Abdullah' });
+    },
+
+    view(vnode: Vnode<IDepCompAttr, IDepCompState>) {
+        return vnode.state.data.map((item) => { return m('span', [ `Name: ${item.name} , ID: ${item.id}`, m.trust('<br>') ]); });
+    }
+} as Component<IDepCompAttr, IDepCompState>;
+
+
+
+interface IState { name: string, id: number, edit:{ name:string } };
+export class DepComponent implements ClassComponent<IDepCompAttr> {
+
+    private state : IState = { 
+        id: 0,
+        name: 'Habbosh Ya Habbosh',
+        edit: {
+            name: ''
+        }
+     }
+
+    oninit( { attrs: { id, name } }: CVnode<IDepCompAttr> ){
+        console.log('init called again');
+        this.state.name = name;
+        this.state.id = id;
+    };
+
+    onupdate() {
+        console.log('calling update');
+    }
+
+    private setName(name: string) {
+        this.state.name = name;
+    }
+
+    private setEditName(name: string) {
+        this.state.edit.name = name;
+    }
+    private getEditName: () => string = () => (this.state.edit.name)
+
+    view() {
+        let self = this;
+        return m('h2', [
+            `Name: ${this.state.name} , ID: ${this.state.id}`,
+            m.trust('</br>'),
+            m('input[type=text]', { 
+                onchange: m.withAttr('value', this.setEditName.bind(this) ), 
+                value: this.getEditName() }),
+            m.trust('</br>'),
+            m('button[type=button]', { key: '1', onclick: (e) => { 
+                this.setName(this.getEditName());
+                e.preventDefault();
+                e.stopPropagation();
+             } }, 'Click Me')
+        ]);
+    }
+}

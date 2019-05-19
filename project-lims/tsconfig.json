@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "target": "es3",
+        "allowJs": true,
+        "module": "commonjs",
+        "lib": [
+            "es5",
+            "es6"
+        ]
+    }
+}

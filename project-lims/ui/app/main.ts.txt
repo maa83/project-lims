@@ -1,0 +1,13 @@
+
+
+import * as m from "mithril";
+import { ClassComponent, CVnode } from "mithril";
+import { SampleModule } from "./Modules/SampleModule";
+
+import { createStore, createActions, createReducer } from '../util/redux-extensions.types'
+
+export let MasterModule = {
+    view() {
+        return m(SampleModule, { name: "Samples Module"  }, [ m('span', 'child one') ] );
+    }
+}

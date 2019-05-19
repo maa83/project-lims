@@ -1,0 +1,139 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>LIMS</title>
+
+    <link rel="stylesheet" href="~/ui/external/semantic-ui/semantic.min.css">
+</head>
+<body>
+
+    <script src="~/ui/external/jquery.min.js"></script>
+    <script src="~/ui/external/lodash.min.js"></script>
+    <script src="~/ui/external/moment.min.js"></script>
+    <script src="~/ui/external/numeral.min.js"></script>
+    <script src="~/ui/external/mithril.min.js"></script>
+    <script src="~/ui/external/redux.min.js"></script>
+    <script src="~/ui/external/semantic-ui/semantic.min.js"></script>
+    <script src="~/ui/app/redux-actions.js"></script>
+    <script src="~/ui/app/utilities.js"></script>
+    <script src="~/ui/app/components.js"></script>
+    <script src="~/ui/app/repo.js"></script>
+    <script src="~/ui/app/models.js"></script>
+    <script src="~/ui/app/Modules/purchaseOrderModule.js"></script>
+    <script src="~/ui/app/Modules/SamplesViewModule.js"></script>
+    <script src="~/ui/app/Modules/testsPageModule.js"></script>
+
+    @RenderSection("Scripts", required: false)
+
+
+    <div class="ui stackable menu">
+        <div class="ui container">
+            <a class="item" href='#!/por'>
+                <i class="table icon"></i>
+                Home
+            </a>
+            <a class="item" href="#!/samples">
+                <i class="boxes icon"></i>
+                Samples
+            </a>
+            <a class="item" href="#!/tests"><i class="flask icon"></i>Tests</a>
+            <a class="item" href="#"><i class="file alternate outline icon"></i>Admin</a>
+        </div>
+    </div>
+
+    <div class="pusher">
+        <div style="padding: 20px 0;" class="ui container">
+            @RenderBody()
+        </div>
+    </div>
+    
+    <!-- <div style="padding: 20px 0;" class="ui four column double stackable grid container">
+        <div class="row">
+            <div class="column">
+                <p>1</p>
+            </div>
+            <div class="column">
+                <p>2</p>
+            </div>
+            <div class="column">
+                <p>3</p>
+            </div>
+            <div class="column">
+                <p>4</p>
+            </div>
+        </div>
+    </div> -->
+
+
+<script>
+
+    function modal(el, modalEl){
+        var mEl = $(modalEl);
+
+        el.addEventListener('click', ( { target } ) => {
+            console.log('clicked');
+            mEl.modal({
+                centered: false,
+                selector: {
+                    close: '.close',
+                    approve: '.ok, .positive',
+                    deny: '.cancel, .negative'
+                },
+                onShow: () => { console.log('modal show'); },
+                onVisible: () => {  },
+                onHide: (el) => { console.log('modal hide'); },
+                onHidden: () => {  },
+                onApprove: (el) => { console.log('modal approved'); },
+                onDeny: (el) => { console.log('modal denied'); }
+            }).modal('show');
+            
+            $('.dropdown').dropdown({
+                onAdd: (val, text, choice) => {
+                    // console.log(val, text, choice);
+                },
+                onRemove: (val, text, choice) => {
+                    // console.log(val, text, choice);
+                },
+                onChange: (val, text, choice) => {
+                    console.log(val, text, choice);
+                },
+                allowAdditions: true,
+                match: 'text',
+                forceSelection: false
+            });
+        });
+    }
+
+    // addEventListener('DOMContentLoaded', (e) => { 
+
+    //     var el = document.querySelector('button#testAddButton');
+    //     var mEl = document.querySelector('div.modal#testAddModal');
+    //     modal(el, mEl);
+    //     el = document.querySelector('button#testEditButton');
+    //     modal(el, mEl);
+
+    //     el = document.querySelector('button#sampleAddButton');
+    //     mEl = document.querySelector('div.modal#sampleAddModal');
+    //     modal(el, mEl);
+    //     el = document.querySelector('button#sampleEditButton');
+    //     modal(el, mEl);
+
+    //     //Initialize DropDowns
+    //     //$('select.dropdown').dropdown();
+
+    //     console.log('DOM loaded');
+    // } );
+
+    // document.addEventListener('readystatechange', (e, s) => {
+    //     if(e.target.readyState == 'interactive')
+    //         console.log('ready');
+    // });
+</script>
+
+</body>
+</html>
